@@ -58,16 +58,31 @@ stop = False
 while not stop:
 
     for event in pygame.event.get():
+        
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_LEFT:
+                print(event)
+            elif event.key == pygame.K_RIGHT:
+                print(event)
+            elif event.key == pygame.K_UP:
+                print(event)
+            elif event.key == pygame.K_DOWN:
+                print(event)
+        if event.type == pygame.KEYUP:
+            if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
+                print(event)
+
+        
         if event.type == pygame.QUIT:
             stop = True
-        print(event)
+        
         
     scherm.fill(green)
     scherm.blit(wesley,(wesley_x,wesley_y))
     
     
     wesley_x = wesley_x + 1
-    print('wesley_x=' + str(wesley_x))
+    #print('wesley_x=' + str(wesley_x))
     
     ''' scherm vernieuwen
     '''
