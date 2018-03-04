@@ -41,4 +41,6 @@ elif gamer_keuze == 'schaar':
     elif computer_keuze == 'blad':
         print('jij wint')
     else: 
-        print('gelijkspel')    
+        print('gelijkspel')   
+else:
+    print('ongeldige keuze, kijk je spelling na !')
