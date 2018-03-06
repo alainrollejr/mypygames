@@ -52,15 +52,24 @@ eerste keuze hebben en een aantal andere scholen die overwegend leerlingen
  van 4e, 5e, 6e enz schoolkeuzes hebben. Dit is geen prettig vooruitzicht
  voor die scholen en zeker ook niet voor de betrokken leerlingen.
 """
-
+import os
+import sys
 import argparse
+import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
 
 def main(argv):
     
     parser = argparse.ArgumentParser(description='script dat scholenkeuze simuleert')
     parser.add_argument('-v','--variant', help='1=super random, 2 = optimisatie 1ste keuze', required=True)
+    parser.add_argument('-t','--total', help='totaal aantal leerlingen dat moet geplaatst worden', required=True)
+    parser.add_argument('-c','--capacity', help='totale capaciteit', required=True)
     parser.add_argument('-p','--path', help='path to input.csv', required=True)    
     args = vars(parser.parse_args())
+    
+    df = pd.read_csv('school_lijst.csv')
+    print(df.head())
     
     
 if __name__ == "__main__":
