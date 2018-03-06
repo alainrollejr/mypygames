@@ -58,6 +58,8 @@ import argparse
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
+import copy
+
 
 def main(argv):
     
@@ -69,7 +71,67 @@ def main(argv):
     args = vars(parser.parse_args())
     
     df = pd.read_csv('school_lijst.csv')
-    print(df.head())
+    aantal_scholen = len(df.index)
+    df['kans dat kind hier naar toe wil']=0.01*df['kans dat kind hier naar toe wil (percent)'].astype(float)
+    prob = df['kans dat kind hier naar toe wil'].tolist()
+    print(type(prob))
+    print(prob)
+    
+    total = int(args['total'])
+    capacity = float(args['capacity'])
+    variant = args['variant']
+    
+    print('total '+ str(total) + ' capacity ' + str(capacity) + ' variant ' + str(variant) + ' aantal scholen ' + str(aantal_scholen))
+    
+    # zet de absolute capaciteit in het dataframe
+    df['plaatsen'] = 0.01*capacity*df['relatieve capaciteit (percent relatief tot totale capaciteit)'].values.astype(float)
+    #print(df.head())
+       
+    # simuleer de aanmeldingen volgens populariteit aangegeven in school_lijst.csv
+    columns = ['kind','1ste keus', '2de keus','3de keus','computer keuze']
+    aanmeldingslijst = pd.DataFrame(columns=columns)
+    for kind in range(total):
+        scholen = np.arange(1, aantal_scholen+1)
+        prob_tmp = copy.deepcopy(prob)        
+        k1 = np.random.choice(scholen, p=prob_tmp)
+        
+        # eerste keus gemaakt, verwijder uit lijst en hernormaliseer populariteit
+        index = scholen.tolist().index(k1)              
+        scholen=np.delete(scholen,index)        
+        prob_tot = 1.0 - prob_tmp[index]       
+        del prob_tmp[index]       
+        i=0
+        for p in prob_tmp:
+            prob_tmp[i] = p/prob_tot
+            i += 1
+        
+        
+        k2 = np.random.choice(scholen, p=prob_tmp)     
+        
+        # tweede keus gemaakt, verwijder uit lijst en hernormaliseer populariteit
+        index = scholen.tolist().index(k2)              
+        scholen=np.delete(scholen,index)        
+        prob_tot = 1.0 - prob_tmp[index]       
+        del prob_tmp[index]       
+        i=0
+        for p in prob_tmp:
+            prob_tmp[i] = p/prob_tot
+            i += 1
+        
+        k3 = np.random.choice(scholen, p=prob_tmp)
+        
+        row=pd.Series([kind,int(k1),int(k2),int(k3),0],columns)
+        aanmeldingslijst = aanmeldingslijst.append([row],ignore_index=True)
+        
+    aanmeldingslijst.to_csv('aanmeldingen.csv')
+    
+    aanmeldingslijst['1ste keus'] = aanmeldingslijst['1ste keus'].astype(int)
+    
+    aanmeldingslijst.hist(column='1ste keus', bins=2*aantal_scholen+1)
+    plt.title('histogram 1ste keus')
+    plt.xlabel('school')
+    plt.ylabel('aantal in 1ste keus')
+    plt.show()
     
     
 if __name__ == "__main__":
