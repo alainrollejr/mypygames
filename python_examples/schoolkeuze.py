@@ -125,12 +125,26 @@ def main(argv):
         
     aanmeldingslijst.to_csv('aanmeldingen.csv')
     
-    aanmeldingslijst['1ste keus'] = aanmeldingslijst['1ste keus'].astype(int)
-    
+    # visualiseer keuzes
+    aanmeldingslijst['1ste keus'] = aanmeldingslijst['1ste keus'].astype(int)    
     aanmeldingslijst.hist(column='1ste keus', bins=2*aantal_scholen+1)
     plt.title('histogram 1ste keus')
     plt.xlabel('school')
     plt.ylabel('aantal in 1ste keus')
+    plt.show()
+    
+    aanmeldingslijst['2de keus'] = aanmeldingslijst['2de keus'].astype(int)    
+    aanmeldingslijst.hist(column='2de keus', bins=2*aantal_scholen+1)
+    plt.title('histogram 2de keus')
+    plt.xlabel('school')
+    plt.ylabel('aantal in 2de keus')
+    plt.show()
+    
+    aanmeldingslijst['3de keus'] = aanmeldingslijst['3de keus'].astype(int)    
+    aanmeldingslijst.hist(column='3de keus', bins=2*aantal_scholen+1)
+    plt.title('histogram 3de keus')
+    plt.xlabel('school')
+    plt.ylabel('aantal in 3de keus')
     plt.show()
     
     
