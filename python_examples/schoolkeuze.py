@@ -17,8 +17,8 @@ ook in aanmerking om gunstig gerangschikt te worden in zijn eerste keuze.
 Als dat gebeurt dan krijgt hij hiervoor een ticket en wordt hij geschrapt in de gunstige 
 rangschikking in zijn tweede keuze. Wordt hij niet gunstig gerangschikt 
 in zijn eerste keuze dan krijgt hij een ticket voor zijn tweede keuze 
-op basis van zijn gunstige rangschikking daar. De regel is dat men een
- ticket bekomt voor de hoogste schoolkeuze waar men gunstig gerangschikt is.
+op basis van zijn gunstige rangschikking daar. DE REGEL IS DAT MEN EEN
+ TICKET BEKOMT VOOR DE HOOGSTE SCHOOLKEUZE WAAR MEN GUNSTIG GERANGSCHIKT IS.
 Hetzelfde gebeurt met leerlingen die gunstig gerangschikt zouden zijn in hun derde, 
 vierde enz schoolkeuzes. 
 Zij maken verschillende keren kans om gunstig gerangschikt te worden in 
@@ -79,13 +79,13 @@ def main(argv):
     
     total = int(args['total'])
     capacity = float(args['capacity'])
-    variant = args['variant']
+    variant = int(args['variant'])
     
     print('total '+ str(total) + ' capacity ' + str(capacity) + ' variant ' + str(variant) + ' aantal scholen ' + str(aantal_scholen))
     
     # zet de absolute capaciteit in het dataframe
     df['plaatsen'] = 0.01*capacity*df['relatieve capaciteit (percent relatief tot totale capaciteit)'].values.astype(float)
-    #print(df.head())
+    print(df.head())
        
     # simuleer de aanmeldingen volgens populariteit aangegeven in school_lijst.csv
     columns = ['kind','1ste keus', '2de keus','3de keus','computer keuze']
@@ -147,6 +147,34 @@ def main(argv):
     plt.ylabel('aantal in 3de keus')
     plt.show()
     
+    """
+        nu het eigenlijke selectie algorithme
+    """
+    lijst_van_wachtrijen = []
+    for school in np.arange(1, aantal_scholen+1):
+        lijst_van_wachtrijen.append([])
+        
+    
+    if variant == 1:
+        # zet elk kind in wachtrij van elke school vernoemd door dat kind
+        for index, row in aanmeldingslijst.iterrows():
+            for school in np.arange(1, aantal_scholen+1):
+                if (row['1ste keus'] == school) or (row['2de keus'] == school) or (row['3de keus'] == school):
+                    lijst_van_wachtrijen[school-1].append(row['kind'])
+                    
+        for school in np.arange(1, aantal_scholen+1):
+            print('initiele wachtrij school ' + str(school)+ ' telt ' + str(len(lijst_van_wachtrijen[school-1])) + ' kinderen')
+            
+            pl_row = df.loc[df['school'] == school]
+            print(type(pl_row))                       
+            print(pl_row['plaatsen'].values)
+            
+        #print(lijst_van_wachtrijen)
+        
+    elif variant == 2:
+        print("variant not supported yet")
+    else:
+        print("unsupported variant")
     
 if __name__ == "__main__":
     main(sys.argv)
