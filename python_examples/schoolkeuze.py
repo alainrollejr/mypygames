@@ -266,7 +266,7 @@ def main(argv):
         k2Vect = aanmeldingslijst['2de keus']
         k3Vect = aanmeldingslijst['3de keus']
         
-        herkansingen = 10
+        herkansingen = 20
         
         print("------ k1 ---------------")
         
@@ -294,7 +294,16 @@ def main(argv):
                         
                         # schrap het kind van alle lagere lijsten
                         lijst_van_wachtlijsten[k2-1].remove(kind)
-                        lijst_van_wachtlijsten[k3-1].remove(kind)
+                        
+                        if kind in  lijst_van_wachtlijsten[k3-1]:
+                            lijst_van_wachtlijsten[k3-1].remove(kind)
+                        
+                    elif kind in lijst_van_wachtlijsten[k2-1][0:n2]:
+                        # kind nu al gunstig geplaatst voor school van tweede keuze
+                        # schrap alvast het kind van de lager gelegen lijst
+                        # maar beslis nog niks finaal                        
+                        if kind in  lijst_van_wachtlijsten[k3-1]:
+                            lijst_van_wachtlijsten[k3-1].remove(kind)
                         
         print("------ k2 ---------------")
                         
@@ -319,7 +328,8 @@ def main(argv):
                         
                         # schrap het kind van de lager gelegen lijst
                         # (het zal nog steeds voorkomen op wachtlijst van hogere lijst)
-                        lijst_van_wachtlijsten[k3-1].remove(kind)
+                        if kind in  lijst_van_wachtlijsten[k3-1]:
+                            lijst_van_wachtlijsten[k3-1].remove(kind)
 
            
         for kind in range(total):
@@ -343,10 +353,10 @@ def main(argv):
     # statistieken
     aanmeldingslijst.to_csv('aanmeldingen.csv')    
     
-    print('aantal_die_eerste_keus_kreeg ' + str(aantal_die_eerste_keus_kreeg))
-    print('aantal_die_tweede_keus_kreeg ' + str(aantal_die_tweede_keus_kreeg))
-    print('aantal_die_derde_keus_kreeg ' + str(aantal_die_derde_keus_kreeg))
-    print('aantal_die_bot_vangt ' + str(aantal_die_bot_vangt))    
+    print('percent_die_eerste_keus_kreeg ' + str(100.0* float(aantal_die_eerste_keus_kreeg)/float(total)))
+    print('percent_die_tweede_keus_kreeg ' + str(100.0* float(aantal_die_tweede_keus_kreeg)/float(total)))
+    print('percent_die_derde_keus_kreeg ' + str(100.0* float(aantal_die_derde_keus_kreeg)/float(total)))
+    print('percent_die_bot_vangt ' + str(100.0* float(aantal_die_bot_vangt)/float(total)))
     
 if __name__ == "__main__":
     main(sys.argv)
