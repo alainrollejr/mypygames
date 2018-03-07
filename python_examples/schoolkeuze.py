@@ -59,6 +59,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 import copy
+import random
 
 
 def main(argv):
@@ -82,7 +83,7 @@ def main(argv):
     print('total '+ str(total) + ' capacity ' + str(capacity) + ' variant ' + str(variant) + ' aantal scholen ' + str(aantal_scholen))
     
     # zet de absolute capaciteit in het dataframe
-    tmp = 0.01*capacity*df['relatieve capaciteit (percent relatief tot totale capaciteit)'].astype(float)
+    tmp = round(0.01*capacity*df['relatieve capaciteit (percent relatief tot totale capaciteit)'].astype(float))
     vrije_plaatsen = tmp.tolist()
     print('vrije plaatsen ' + str(vrije_plaatsen))
     
@@ -152,8 +153,12 @@ def main(argv):
         nu het eigenlijke selectie algorithme
     """
     lijst_van_wachtrijen = []
+    lijst_weerhouden = []
     for school in np.arange(1, aantal_scholen+1):
         lijst_van_wachtrijen.append([])
+        lijst_weerhouden.append([])
+        
+    
         
     
     if variant == 1:
@@ -162,16 +167,23 @@ def main(argv):
             for school in np.arange(1, aantal_scholen+1):
                 if (row['1ste keus'] == school) or (row['2de keus'] == school) or (row['3de keus'] == school):
                     lijst_van_wachtrijen[school-1].append(row['kind'])
-                    
+        
+        wachtrij_lengtes = {}   
         for school in np.arange(1, aantal_scholen+1):
             print('initiele wachtrij school ' + str(school)+ 
                   ' (aka ' + str(school_namen[school-1]) + ') '+
                   ' telt ' + str(len(lijst_van_wachtrijen[school-1])) + 
                   ' kinderen' + ' , vrije plaatsen ' + str(vrije_plaatsen[school -1]))
+            wachtrij_lengtes[school-1] = len(lijst_van_wachtrijen[school-1])
             
+            # trek willekeurig de weerhouden lijst uit de wachtrij
+            print(int(vrije_plaatsen[school -1]))
+            lijst_weerhouden[school-1].append(np.random.choice(lijst_van_wachtrijen[school-1],int(vrije_plaatsen[school -1])))
             
+        print(wachtrij_lengtes)     
             
-        #print(lijst_van_wachtrijen)
+        print(lijst_van_wachtrijen)
+        print(lijst_weerhouden)
         
     elif variant == 2:
         print("variant not supported yet")
