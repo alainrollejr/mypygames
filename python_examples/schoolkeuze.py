@@ -74,9 +74,7 @@ def main(argv):
     aantal_scholen = len(df.index)
     df['kans dat kind hier naar toe wil']=0.01*df['kans dat kind hier naar toe wil (percent)'].astype(float)
     prob = df['kans dat kind hier naar toe wil'].tolist()
-    print(type(prob))
-    print(prob)
-    
+        
     total = int(args['total'])
     capacity = float(args['capacity'])
     variant = int(args['variant'])
@@ -84,8 +82,11 @@ def main(argv):
     print('total '+ str(total) + ' capacity ' + str(capacity) + ' variant ' + str(variant) + ' aantal scholen ' + str(aantal_scholen))
     
     # zet de absolute capaciteit in het dataframe
-    df['plaatsen'] = 0.01*capacity*df['relatieve capaciteit (percent relatief tot totale capaciteit)'].values.astype(float)
-    print(df.head())
+    tmp = 0.01*capacity*df['relatieve capaciteit (percent relatief tot totale capaciteit)'].astype(float)
+    vrije_plaatsen = tmp.tolist()
+    print('vrije plaatsen ' + str(vrije_plaatsen))
+    
+    school_namen = df['naam (optioneel)'].tolist()
        
     # simuleer de aanmeldingen volgens populariteit aangegeven in school_lijst.csv
     columns = ['kind','1ste keus', '2de keus','3de keus','computer keuze']
@@ -163,11 +164,12 @@ def main(argv):
                     lijst_van_wachtrijen[school-1].append(row['kind'])
                     
         for school in np.arange(1, aantal_scholen+1):
-            print('initiele wachtrij school ' + str(school)+ ' telt ' + str(len(lijst_van_wachtrijen[school-1])) + ' kinderen')
+            print('initiele wachtrij school ' + str(school)+ 
+                  ' (aka ' + str(school_namen[school-1]) + ') '+
+                  ' telt ' + str(len(lijst_van_wachtrijen[school-1])) + 
+                  ' kinderen' + ' , vrije plaatsen ' + str(vrije_plaatsen[school -1]))
             
-            pl_row = df.loc[df['school'] == school]
-            print(type(pl_row))                       
-            print(pl_row['plaatsen'].values)
+            
             
         #print(lijst_van_wachtrijen)
         
