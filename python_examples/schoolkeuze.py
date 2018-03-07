@@ -152,10 +152,12 @@ def main(argv):
     """
         nu het eigenlijke selectie algorithme
     """
-    lijst_van_wachtrijen = []
+    
+    # lege lijst initialisatie
+    lijst_van_wachtlijsten = []
     lijst_weerhouden = []
     for school in np.arange(1, aantal_scholen+1):
-        lijst_van_wachtrijen.append([])
+        lijst_van_wachtlijsten.append([])
         lijst_weerhouden.append([])
         
     
@@ -166,24 +168,65 @@ def main(argv):
         for index, row in aanmeldingslijst.iterrows():
             for school in np.arange(1, aantal_scholen+1):
                 if (row['1ste keus'] == school) or (row['2de keus'] == school) or (row['3de keus'] == school):
-                    lijst_van_wachtrijen[school-1].append(row['kind'])
+                    lijst_van_wachtlijsten[school-1].append(row['kind'])
         
-        wachtrij_lengtes = {}   
+           
         for school in np.arange(1, aantal_scholen+1):
             print('initiele wachtrij school ' + str(school)+ 
                   ' (aka ' + str(school_namen[school-1]) + ') '+
-                  ' telt ' + str(len(lijst_van_wachtrijen[school-1])) + 
+                  ' telt ' + str(len(lijst_van_wachtlijsten[school-1])) + 
                   ' kinderen' + ' , vrije plaatsen ' + str(vrije_plaatsen[school -1]))
-            wachtrij_lengtes[school-1] = len(lijst_van_wachtrijen[school-1])
+                       
             
-            # trek willekeurig de weerhouden lijst uit de wachtrij
-            print(int(vrije_plaatsen[school -1]))
-            lijst_weerhouden[school-1].append(np.random.choice(lijst_van_wachtrijen[school-1],int(vrije_plaatsen[school -1])))
+            # shuffle de initiele wachtrij            
+            random.shuffle(lijst_van_wachtlijsten[school-1])
+            print(lijst_van_wachtlijsten[school-1])
+                    
             
-        print(wachtrij_lengtes)     
             
-        print(lijst_van_wachtrijen)
-        print(lijst_weerhouden)
+        # loop over alle kinderen
+        k1Vect = aanmeldingslijst['1ste keus']
+        k2Vect = aanmeldingslijst['2de keus']
+        k3Vect = aanmeldingslijst['3de keus']
+        for kind in range(total):
+            # print('kind '+ str(kind) + ' 1ste keus ' +str(k1Vect[kind]))
+            k1 = k1Vect[kind]
+            k2 = k2Vect[kind]
+            k3 = k3Vect[kind]
+            
+            n1 = int(vrije_plaatsen[k1 -1])
+            n2 = int(vrije_plaatsen[k2 -1])
+            n3 = int(vrije_plaatsen[k3 -1])
+            
+            if kind in lijst_van_wachtlijsten[k1-1][0:n1]: 
+                # kind gunstig geplaatst voor school van eerste keus
+                # makkelijkst geval. Kind is weerhouden voor 1ste keuze
+                aanmeldingslijst['computer keuze'][kind] = k1
+                
+                # schrap het kind van alle lagere lijsten
+                if kind in lijst_van_wachtlijsten[k2-1]:
+                    lijst_van_wachtlijsten[k2-1].remove(kind)
+                    
+                # schrap het kind van alle andere lijsten
+                if kind in lijst_van_wachtlijsten[k3-1]:
+                    lijst_van_wachtlijsten[k3-1].remove(kind)
+            elif kind in lijst_van_wachtlijsten[k2-1][0:n2]:
+                # kind gunstig geplaatst voor school van tweede keuze
+                aanmeldingslijst['computer keuze'][kind] = k2
+                
+                # schrap het kind van de lager gelegen lijst
+                # (het zal nog steeds voorkomen op wachtlijst van hogere lijst)
+                if kind in lijst_van_wachtlijsten[k3-1]:
+                    lijst_van_wachtlijsten[k3-1].remove(kind)
+            elif kind in lijst_van_wachtlijsten[k3-1][0:n3]:
+                # kind gunstig geplaatst voor school van derde keuze
+                aanmeldingslijst['computer keuze'][kind] = k3    
+                    
+            
+        aanmeldingslijst.to_csv('aanmeldingen.csv')     
+        
+            
+        
         
     elif variant == 2:
         print("variant not supported yet")
