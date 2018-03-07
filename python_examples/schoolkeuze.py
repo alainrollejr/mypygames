@@ -185,6 +185,11 @@ def main(argv):
             
             
         # loop over alle kinderen
+        aantal_die_eerste_keus_kreeg = 0
+        aantal_die_tweede_keus_kreeg = 0
+        aantal_die_derde_keus_kreeg = 0
+        aantal_die_bot_vangt = 0
+        
         k1Vect = aanmeldingslijst['1ste keus']
         k2Vect = aanmeldingslijst['2de keus']
         k3Vect = aanmeldingslijst['3de keus']
@@ -202,25 +207,30 @@ def main(argv):
                 # kind gunstig geplaatst voor school van eerste keus
                 # makkelijkst geval. Kind is weerhouden voor 1ste keuze
                 aanmeldingslijst['computer keuze'][kind] = k1
+                aantal_die_eerste_keus_kreeg += 1
                 
                 # schrap het kind van alle lagere lijsten
                 if kind in lijst_van_wachtlijsten[k2-1]:
                     lijst_van_wachtlijsten[k2-1].remove(kind)
-                    
-                # schrap het kind van alle andere lijsten
                 if kind in lijst_van_wachtlijsten[k3-1]:
                     lijst_van_wachtlijsten[k3-1].remove(kind)
+                    
             elif kind in lijst_van_wachtlijsten[k2-1][0:n2]:
                 # kind gunstig geplaatst voor school van tweede keuze
                 aanmeldingslijst['computer keuze'][kind] = k2
+                aantal_die_tweede_keus_kreeg += 1
                 
                 # schrap het kind van de lager gelegen lijst
                 # (het zal nog steeds voorkomen op wachtlijst van hogere lijst)
                 if kind in lijst_van_wachtlijsten[k3-1]:
                     lijst_van_wachtlijsten[k3-1].remove(kind)
+                    
             elif kind in lijst_van_wachtlijsten[k3-1][0:n3]:
                 # kind gunstig geplaatst voor school van derde keuze
-                aanmeldingslijst['computer keuze'][kind] = k3    
+                aanmeldingslijst['computer keuze'][kind] = k3 
+                aantal_die_derde_keus_kreeg += 1
+            else:
+                aantal_die_bot_vangt += 1
                     
             
         aanmeldingslijst.to_csv('aanmeldingen.csv')     
@@ -232,6 +242,12 @@ def main(argv):
         print("variant not supported yet")
     else:
         print("unsupported variant")
+        
+    # statistieken
+    print('aantal_die_eerste_keus_kreeg ' + str(aantal_die_eerste_keus_kreeg))
+    print('aantal_die_tweede_keus_kreeg ' + str(aantal_die_tweede_keus_kreeg))
+    print('aantal_die_derde_keus_kreeg ' + str(aantal_die_derde_keus_kreeg))
+    print('aantal_die_bot_vangt ' + str(aantal_die_bot_vangt))    
     
 if __name__ == "__main__":
     main(sys.argv)
