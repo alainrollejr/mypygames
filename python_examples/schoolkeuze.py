@@ -308,6 +308,7 @@ def main(argv):
         print("------ k2 ---------------")
                         
         for herkansing in range(herkansingen):    
+            
             for kind in range(total):
                 
                 if aanmeldingslijst['computer keuze'][kind] < 0: # nog geen definitieve keuze
@@ -322,7 +323,7 @@ def main(argv):
                         # kind gunstig geplaatst voor school van tweede keuze
                         aanmeldingslijst['computer keuze'][kind] = k2
                         if herkansing > 0:
-                            print('herkansing ' + str(herkansing) + ' kind ' + str(kind) + ' k2 ' + str(k1))
+                            print('herkansing ' + str(herkansing) + ' kind ' + str(kind) + ' k2 ' + str(k2))
                         aantal_die_tweede_keus_kreeg += 1
                         
                         
