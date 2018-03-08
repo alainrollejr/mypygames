@@ -163,7 +163,15 @@ def main(argv):
         lijst_weerhouden.append([])
         
     
-        
+    aantal_die_eerste_keus_kreeg = 0
+    aantal_die_tweede_keus_kreeg = 0
+    aantal_die_derde_keus_kreeg = 0
+    aantal_die_bot_vangt = 0    
+    
+            
+    k1Vect = aanmeldingslijst['1ste keus']
+    k2Vect = aanmeldingslijst['2de keus']
+    k3Vect = aanmeldingslijst['3de keus']
     
     if variant == 1: # te simpel, geen verschillende kansen
         # zet elk kind in wachtrij van elke school vernoemd door dat kind
@@ -256,15 +264,8 @@ def main(argv):
                     
             
             
-        # loop over alle kinderen
-        aantal_die_eerste_keus_kreeg = 0
-        aantal_die_tweede_keus_kreeg = 0
-        aantal_die_derde_keus_kreeg = 0
-        aantal_die_bot_vangt = 0
-        
-        k1Vect = aanmeldingslijst['1ste keus']
-        k2Vect = aanmeldingslijst['2de keus']
-        k3Vect = aanmeldingslijst['3de keus']
+        # loop over alle kinderen       
+
         
         herkansingen = 20
         
@@ -348,8 +349,134 @@ def main(argv):
                 else:
                     aantal_die_bot_vangt += 1
         
-    else:
+    elif variant == 3:
+        # zet elk kind in wachtrij van zijn school van eerste keuze
+        for index, row in aanmeldingslijst.iterrows():
+            for school in np.arange(1, aantal_scholen+1):
+                if (row['1ste keus'] == school):
+                    lijst_van_wachtlijsten[school-1].append(row['kind'])
+                    
+        for school in np.arange(1, aantal_scholen+1):
+            print('\n')
+            print('initiele wachtrij school ' + str(school)+ 
+                  ' (aka ' + str(school_namen[school-1]) + ') '+
+                  ' telt ' + str(len(lijst_van_wachtlijsten[school-1])) + 
+                  ' kinderen' + ' , vrije plaatsen ' + str(vrije_plaatsen[school -1]))
+                       
+            
+            # shuffle de initiele wachtrij            
+            random.shuffle(lijst_van_wachtlijsten[school-1])
+            print(lijst_van_wachtlijsten[school-1])
+                    
+        for kind in range(total):
+            #print('comp keuze '+ str(aanmeldingslijst['computer keuze'][kind]))
+            if aanmeldingslijst['computer keuze'][kind] < 0: # nog geen definitieve keuze
+                # print('kind '+ str(kind) + ' 1ste keus ' +str(k1Vect[kind]))
+                k1 = k1Vect[kind]              
+                n1 = int(vrije_plaatsen[k1 -1])
+                
+                
+                if kind in lijst_van_wachtlijsten[k1-1][0:n1]: 
+                    # kind gunstig geplaatst voor school van eerste keus
+                    # makkelijkst geval. Kind is sowieso blij en weerhouden voor 1ste keuze
+                    aanmeldingslijst['computer keuze'][kind] = k1                    
+                    aantal_die_eerste_keus_kreeg += 1
+                    
+                    lijst_weerhouden[k1-1].append(kind)
+                    vrije_plaatsen[k1 -1] = vrije_plaatsen[k1 -1] -1;
+                    lijst_van_wachtlijsten[k1-1].remove(kind)
+                    
+        # zet elk kind in wachtrij van zijn school van tweede keuze
+        for index, row in aanmeldingslijst.iterrows():
+            kind = row['kind']
+            if aanmeldingslijst['computer keuze'][kind] < 0: # nog geen definitieve keuze
+                for school in np.arange(1, aantal_scholen+1):
+                    if (row['2de keus'] == school):
+                        lijst_van_wachtlijsten[school-1].append(kind)
+                    
+        for school in np.arange(1, aantal_scholen+1):
+            print('\n')
+            print(' wachtrij school ' + str(school)+ 
+                  ' (aka ' + str(school_namen[school-1]) + ') '+
+                  ' telt ' + str(len(lijst_van_wachtlijsten[school-1])) + 
+                  ' kinderen' + ' , vrije plaatsen ' + str(vrije_plaatsen[school -1]))
+                       
+            
+            # shuffle de  wachtrij            
+            random.shuffle(lijst_van_wachtlijsten[school-1])
+            print(lijst_van_wachtlijsten[school-1])
+                    
+        for kind in range(total):
+            #print('comp keuze '+ str(aanmeldingslijst['computer keuze'][kind]))
+            if aanmeldingslijst['computer keuze'][kind] < 0: # nog geen definitieve keuze
+                # print('kind '+ str(kind) + ' 1ste keus ' +str(k1Vect[kind]))
+                k2 = k2Vect[kind]              
+                n2 = int(vrije_plaatsen[k2 -1])
+                
+                
+                if kind in lijst_van_wachtlijsten[k2-1][0:n2]: 
+                    # kind gunstig geplaatst voor school van tweede keus
+                    
+                    aanmeldingslijst['computer keuze'][kind] = k2                    
+                    aantal_die_tweede_keus_kreeg += 1
+                    
+                    lijst_weerhouden[k2-1].append(kind)
+                    vrije_plaatsen[k2 -1] = vrije_plaatsen[k2 -1] -1;
+                    lijst_van_wachtlijsten[k2-1].remove(kind)
+                    
+        # zet elk kind in wachtrij van zijn school van derde keuze
+        for index, row in aanmeldingslijst.iterrows():
+            kind = row['kind']
+            if aanmeldingslijst['computer keuze'][kind] < 0: # nog geen definitieve keuze
+                for school in np.arange(1, aantal_scholen+1):
+                    if (row['3de keus'] == school):
+                        lijst_van_wachtlijsten[school-1].append(kind)
+                    
+        for school in np.arange(1, aantal_scholen+1):
+            print('\n')
+            print(' wachtrij school ' + str(school)+ 
+                  ' (aka ' + str(school_namen[school-1]) + ') '+
+                  ' telt ' + str(len(lijst_van_wachtlijsten[school-1])) + 
+                  ' kinderen' + ' , vrije plaatsen ' + str(vrije_plaatsen[school -1]))
+                       
+            
+            # shuffle de  wachtrij            
+            random.shuffle(lijst_van_wachtlijsten[school-1])
+            print(lijst_van_wachtlijsten[school-1])
+                    
+        for kind in range(total):
+            #print('comp keuze '+ str(aanmeldingslijst['computer keuze'][kind]))
+            if aanmeldingslijst['computer keuze'][kind] < 0: # nog geen definitieve keuze
+                
+                k3 = k3Vect[kind]              
+                n3 = int(vrije_plaatsen[k3 -1])
+                
+                
+                if kind in lijst_van_wachtlijsten[k3-1][0:n3]: 
+                    # kind gunstig geplaatst voor school van tweede keus
+                    
+                    aanmeldingslijst['computer keuze'][kind] = k3                    
+                    aantal_die_derde_keus_kreeg += 1
+                    print('kind '+ str(kind) + ' krijgt 3de keus school ' +str(k3))
+                    
+                    lijst_weerhouden[k3-1].append(kind)
+                    vrije_plaatsen[k3 -1] = vrije_plaatsen[k3 -1] -1;
+                    lijst_van_wachtlijsten[k3-1].remove(kind) 
+
+        for kind in range(total):
+            #print('comp keuze '+ str(aanmeldingslijst['computer keuze'][kind]))
+            if aanmeldingslijst['computer keuze'][kind] < 0: # nog geen definitieve keuze
+                print('kind '+ str(kind) + ' vangt bot')
+                aantal_die_bot_vangt += 1;                  
+        
+    else:                
         print("unsupported variant")
+        
+    # optional: check if final swaps can improve !!
+    # TODO !
+    # for all kids die niet 1ste keus k1 toegewezen kregen: 
+    #     zoek ander kind die k1 kreeg maar voor hem was dat k2 of k3
+    #           als voor hem reciprook, swap (kruis conditie) 
         
     # statistieken
     aanmeldingslijst.to_csv('aanmeldingen.csv')    
