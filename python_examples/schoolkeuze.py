@@ -52,7 +52,7 @@ eerste keuze hebben en een aantal andere scholen die overwegend leerlingen
  van 4e, 5e, 6e enz schoolkeuzes hebben. Dit is geen prettig vooruitzicht
  voor die scholen en zeker ook niet voor de betrokken leerlingen.
 """
-import os
+
 import sys
 import argparse
 import numpy as np
@@ -60,6 +60,27 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import copy
 import random
+
+def get_stats(aanmeldingslijst, total):
+    aantal_dat_eerste_keus_kreeg = 0
+    aantal_dat_tweede_keus_kreeg = 0
+    aantal_dat_derde_keus_kreeg = 0
+    aantal_dat_bot_vangt = 0
+    
+    for index, row in aanmeldingslijst.iterrows():
+        if (row['1ste keus'] == row['computer keuze']):
+            aantal_dat_eerste_keus_kreeg += 1
+        elif (row['2de keus'] == row['computer keuze']):
+            aantal_dat_tweede_keus_kreeg += 1
+        elif (row['3de keus'] == row['computer keuze']):
+            aantal_dat_derde_keus_kreeg += 1
+        else:
+            aantal_dat_bot_vangt += 1
+    print('percent_dat_eerste_keus_kreeg ' + str(100.0* float(aantal_dat_eerste_keus_kreeg)/float(total)))
+    print('percent_dat_tweede_keus_kreeg ' + str(100.0* float(aantal_dat_tweede_keus_kreeg)/float(total)))
+    print('percent_dat_derde_keus_kreeg ' + str(100.0* float(aantal_dat_derde_keus_kreeg)/float(total)))
+    print('percent_dat_bot_vangt ' + str(100.0* float(aantal_dat_bot_vangt)/float(total)))
+    
 
 
 def main(argv):
@@ -127,7 +148,7 @@ def main(argv):
         row=pd.Series([kind,int(k1),int(k2),int(k3),-1],columns) # - 1 betekent nog geen computer keus
         aanmeldingslijst = aanmeldingslijst.append([row],ignore_index=True)
         
-    aanmeldingslijst.to_csv('aanmeldingen.csv')
+    aanmeldingslijst.to_csv('aanmeldingen_input.csv')
     
     # visualiseer keuzes
     aanmeldingslijst['1ste keus'] = aanmeldingslijst['1ste keus'].astype(int)    
@@ -163,10 +184,7 @@ def main(argv):
         lijst_weerhouden.append([])
         
     
-    aantal_die_eerste_keus_kreeg = 0
-    aantal_die_tweede_keus_kreeg = 0
-    aantal_die_derde_keus_kreeg = 0
-    aantal_die_bot_vangt = 0    
+
     
             
     k1Vect = aanmeldingslijst['1ste keus']
@@ -186,8 +204,7 @@ def main(argv):
             print('initiele wachtrij school ' + str(school)+ 
                   ' (aka ' + str(school_namen[school-1]) + ') '+
                   ' telt ' + str(len(lijst_van_wachtlijsten[school-1])) + 
-                  ' kinderen' + ' , vrije plaatsen ' + str(vrije_plaatsen[school -1]))
-                       
+                  ' kinderen' + ' , vrije plaatsen ' + str(vrije_plaatsen[school -1]))                     
             
             # shuffle de initiele wachtrij            
             random.shuffle(lijst_van_wachtlijsten[school-1])
@@ -196,10 +213,6 @@ def main(argv):
             
             
         # loop over alle kinderen
-        aantal_die_eerste_keus_kreeg = 0
-        aantal_die_tweede_keus_kreeg = 0
-        aantal_die_derde_keus_kreeg = 0
-        aantal_die_bot_vangt = 0
         
         k1Vect = aanmeldingslijst['1ste keus']
         k2Vect = aanmeldingslijst['2de keus']
@@ -219,7 +232,7 @@ def main(argv):
                 # kind gunstig geplaatst voor school van eerste keus
                 # makkelijkst geval. Kind is weerhouden voor 1ste keuze
                 aanmeldingslijst['computer keuze'][kind] = k1
-                aantal_die_eerste_keus_kreeg += 1
+                
                 
                 # schrap het kind van alle lagere lijsten
                 lijst_van_wachtlijsten[k2-1].remove(kind)
@@ -228,7 +241,7 @@ def main(argv):
             elif kind in lijst_van_wachtlijsten[k2-1][0:n2]:
                 # kind gunstig geplaatst voor school van tweede keuze
                 aanmeldingslijst['computer keuze'][kind] = k2
-                aantal_die_tweede_keus_kreeg += 1
+                
                 
                 # schrap het kind van de lager gelegen lijst
                 # (het zal nog steeds voorkomen op wachtlijst van hogere lijst)
@@ -237,9 +250,7 @@ def main(argv):
             elif kind in lijst_van_wachtlijsten[k3-1][0:n3]:
                 # kind gunstig geplaatst voor school van derde keuze
                 aanmeldingslijst['computer keuze'][kind] = k3 
-                aantal_die_derde_keus_kreeg += 1
-            else:
-                aantal_die_bot_vangt += 1
+                
                     
       
     elif variant == 2: # als variant 1, maar verschillende kansen voor 1 kind 
@@ -291,7 +302,7 @@ def main(argv):
                         aanmeldingslijst['computer keuze'][kind] = k1
                         if  herkansing > 0:
                             print('herkansing ' + str(herkansing) + ' kind ' + str(kind) + ' k1 ' + str(k1))
-                        aantal_die_eerste_keus_kreeg += 1
+                       
                         
                         # schrap het kind van alle lagere lijsten
                         lijst_van_wachtlijsten[k2-1].remove(kind)
@@ -325,7 +336,7 @@ def main(argv):
                         aanmeldingslijst['computer keuze'][kind] = k2
                         if herkansing > 0:
                             print('herkansing ' + str(herkansing) + ' kind ' + str(kind) + ' k2 ' + str(k2))
-                        aantal_die_tweede_keus_kreeg += 1
+                        
                         
                         
                         # schrap het kind van de lager gelegen lijst
@@ -345,11 +356,8 @@ def main(argv):
                 if kind in lijst_van_wachtlijsten[k3-1][0:n3]:
                     # kind gunstig geplaatst voor school van derde keuze
                     aanmeldingslijst['computer keuze'][kind] = k3                     
-                    aantal_die_derde_keus_kreeg += 1
-                else:
-                    aantal_die_bot_vangt += 1
-        
-    elif variant == 3:
+                            
+    elif variant == 3:  # meest intuitief: eerst alle k1 trekken, dan alle k2
         # zet elk kind in wachtrij van zijn school van eerste keuze
         for index, row in aanmeldingslijst.iterrows():
             for school in np.arange(1, aantal_scholen+1):
@@ -380,7 +388,7 @@ def main(argv):
                     # kind gunstig geplaatst voor school van eerste keus
                     # makkelijkst geval. Kind is sowieso blij en weerhouden voor 1ste keuze
                     aanmeldingslijst['computer keuze'][kind] = k1                    
-                    aantal_die_eerste_keus_kreeg += 1
+                    
                     
                     lijst_weerhouden[k1-1].append(kind)
                     vrije_plaatsen[k1 -1] = vrije_plaatsen[k1 -1] -1;
@@ -418,7 +426,7 @@ def main(argv):
                     # kind gunstig geplaatst voor school van tweede keus
                     
                     aanmeldingslijst['computer keuze'][kind] = k2                    
-                    aantal_die_tweede_keus_kreeg += 1
+                    
                     
                     lijst_weerhouden[k2-1].append(kind)
                     vrije_plaatsen[k2 -1] = vrije_plaatsen[k2 -1] -1;
@@ -456,26 +464,21 @@ def main(argv):
                     # kind gunstig geplaatst voor school van tweede keus
                     
                     aanmeldingslijst['computer keuze'][kind] = k3                    
-                    aantal_die_derde_keus_kreeg += 1
+                    
                     print('kind '+ str(kind) + ' krijgt 3de keus school ' +str(k3))
                     
                     lijst_weerhouden[k3-1].append(kind)
                     vrije_plaatsen[k3 -1] = vrije_plaatsen[k3 -1] -1;
                     lijst_van_wachtlijsten[k3-1].remove(kind) 
 
-        for kind in range(total):
-            #print('comp keuze '+ str(aanmeldingslijst['computer keuze'][kind]))
-            if aanmeldingslijst['computer keuze'][kind] < 0: # nog geen definitieve keuze
-                print('kind '+ str(kind) + ' vangt bot')
-                aantal_die_bot_vangt += 1;                  
+                          
         
     else:                
         print("unsupported variant")
         
-    print('percent_die_eerste_keus_kreeg ' + str(100.0* float(aantal_die_eerste_keus_kreeg)/float(total)))
-    print('percent_die_tweede_keus_kreeg ' + str(100.0* float(aantal_die_tweede_keus_kreeg)/float(total)))
-    print('percent_die_derde_keus_kreeg ' + str(100.0* float(aantal_die_derde_keus_kreeg)/float(total)))
-    print('percent_die_bot_vangt ' + str(100.0* float(aantal_die_bot_vangt)/float(total)))
+    
+    # stats before check for swaps
+    get_stats(aanmeldingslijst, total)
         
     # optional: check if final swaps can improve !!
     # TODO !
@@ -495,21 +498,48 @@ def main(argv):
                         
                         if k_B != k1_B: # kind B kreeg niet zijn eerste keuze
                         
-                            k2_B = k2Vect[kind_B]
-                            k3_B = k3Vect[kind_B]
+                            k2_B = k2Vect[kind_B]                            
                             
                             if k_B == k1_A:
-                                # kind B kreeg de vookeur school van kind A
-                                
+                                # kind B kreeg de vookeur school van kind A                                
                                 # als kind A nu ook de voorkeur school van kind B kreeg
                                 # kan je ruilen
                                 if k_A == k1_B:
-                                    print('kind ' + str(kind_A) + ' zou kunnen ruilen met ' 
+                                    print('kind ' + str(kind_A) + ' kan ruilen met ' 
                                           + 'kind ' + str(kind_B));
-                                    #TODO: ruil
-                                
+                                    aanmeldingslijst['computer keuze'][kind_B] = k_A
+                                    aanmeldingslijst['computer keuze'][kind_A] = k_B
+    for kind_A in range(total):
+        k_A = aanmeldingslijst['computer keuze'][kind_A]
+        if k_A > 0: # kreeg een school toebedeeld
+            k1_A = k1Vect[kind_A]
+            k2_A = k2Vect[kind_A]
+            if k_A != k2_A and k_A != k1_A: # kind A kreeg niet zijn eerste of tweede keus
+                # ga op zoek naar kind B om mee te ruilen
+                for kind_B in range(total):
+                    if kind_A != kind_B:
+                        k_B = aanmeldingslijst['computer keuze'][kind_B]
+                        k1_B = k1Vect[kind_B]
+                        k2_B = k2Vect[kind_B]
+                        
+                        if k_B != k2_B and k_B != k1_B: # kind B kreeg niet zijn eerste of tweede keuze
+                        
+                            k2_B = k2Vect[kind_B]                            
                             
-                            
+                            if k_B == k2_A:
+                                # kind B kreeg de 2de vookeur school van kind A                                
+                                # als kind A nu ook de 2de voorkeur school van kind B kreeg
+                                # kan je ruilen
+                                if k_A == k2_B:
+                                    print('kind ' + str(kind_A) + ' kan 2de vrkr ruilen met ' 
+                                          + 'kind ' + str(kind_B));
+                                    aanmeldingslijst['computer keuze'][kind_B] = k_A
+                                    aanmeldingslijst['computer keuze'][kind_A] = k_B
+  
+    # stats before check for swaps
+    get_stats(aanmeldingslijst, total)
+                        
+    # TODO: zoek mogelijke swaps tss k2 en k3, eenmaal je niks meer kunt doen vr de k1's                        
                             
             
      
@@ -517,10 +547,7 @@ def main(argv):
     # statistieken
     aanmeldingslijst.to_csv('aanmeldingen.csv')    
     
-    print('percent_die_eerste_keus_kreeg ' + str(100.0* float(aantal_die_eerste_keus_kreeg)/float(total)))
-    print('percent_die_tweede_keus_kreeg ' + str(100.0* float(aantal_die_tweede_keus_kreeg)/float(total)))
-    print('percent_die_derde_keus_kreeg ' + str(100.0* float(aantal_die_derde_keus_kreeg)/float(total)))
-    print('percent_die_bot_vangt ' + str(100.0* float(aantal_die_bot_vangt)/float(total)))
+    
     
 if __name__ == "__main__":
     main(sys.argv)
