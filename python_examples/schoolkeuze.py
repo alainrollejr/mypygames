@@ -81,7 +81,94 @@ def get_stats(aanmeldingslijst, total):
     print('percent_dat_derde_keus_kreeg ' + str(100.0* float(aantal_dat_derde_keus_kreeg)/float(total)))
     print('percent_dat_bot_vangt ' + str(100.0* float(aantal_dat_bot_vangt)/float(total)))
     
-
+def try_swaps(aanmeldingslijst, total):
+    k1Vect = aanmeldingslijst['1ste keus']
+    k2Vect = aanmeldingslijst['2de keus']
+    k3Vect = aanmeldingslijst['3de keus']
+    
+    # optional: check if final swaps can improve !!
+    # TODO !
+    # for all kids die niet 1ste keus k1 toegewezen kregen: 
+    #     zoek ander kind die wel k1 kreeg maar voor hem was dat k2 of k3
+    #           dan swap(kruis conditie) 
+    for kind_A in range(total):
+        k_A = aanmeldingslijst['computer keuze'][kind_A]
+        if k_A > 0: # kreeg een school toebedeeld
+            k1_A = k1Vect[kind_A]
+            if k_A != k1_A: # kind A kreeg niet zijn eerste keus
+                # ga op zoek naar kind B om mee te ruilen
+                for kind_B in range(total):
+                    if kind_A != kind_B:
+                        k_B = aanmeldingslijst['computer keuze'][kind_B]
+                        k1_B = k1Vect[kind_B]
+                        
+                        if k_B != k1_B: # kind B kreeg niet zijn eerste keuze
+                        
+                            k2_B = k2Vect[kind_B]                            
+                            
+                            if k_B == k1_A:
+                                # kind B kreeg de vookeur school van kind A                                
+                                # als kind A nu ook de voorkeur school van kind B kreeg
+                                # kan je ruilen
+                                if k_A == k1_B:
+                                    #print('kind ' + str(kind_A) + ' kan ruilen met '+ 'kind ' + str(kind_B));
+                                    aanmeldingslijst['computer keuze'][kind_B] = k_A
+                                    aanmeldingslijst['computer keuze'][kind_A] = k_B
+    for kind_A in range(total):
+        k_A = aanmeldingslijst['computer keuze'][kind_A]
+        if k_A > 0: # kreeg een school toebedeeld
+            k1_A = k1Vect[kind_A]
+            k2_A = k2Vect[kind_A]
+            if k_A != k2_A and k_A != k1_A: # kind A kreeg niet zijn eerste of tweede keus
+                # ga op zoek naar kind B om mee te ruilen
+                for kind_B in range(total):
+                    if kind_A != kind_B:
+                        k_B = aanmeldingslijst['computer keuze'][kind_B]
+                        k1_B = k1Vect[kind_B]
+                        k2_B = k2Vect[kind_B]
+                        
+                        if k_B != k2_B and k_B != k1_B: # kind B kreeg niet zijn eerste of tweede keuze
+                        
+                            k2_B = k2Vect[kind_B]                            
+                            
+                            if k_B == k2_A:
+                                # kind B kreeg de 2de vookeur school van kind A                                
+                                # als kind A nu ook de 2de voorkeur school van kind B kreeg
+                                # kan je ruilen
+                                if k_A == k2_B:
+                                    # print('kind ' + str(kind_A) + ' kan 2de vrkr ruilen met ' + 'kind ' + str(kind_B));
+                                    aanmeldingslijst['computer keuze'][kind_B] = k_A
+                                    aanmeldingslijst['computer keuze'][kind_A] = k_B
+                                    
+    for kind_A in range(total):
+        k_A = aanmeldingslijst['computer keuze'][kind_A]
+        if k_A > 0: # kreeg een school toebedeeld
+            k1_A = k1Vect[kind_A]
+            k2_A = k2Vect[kind_A]
+            k3_A = k3Vect[kind_A]
+            
+            if k_A != k3_A and k_A != k2_A and k_A != k1_A: # kind A kreeg niet zijn eerste of tweede of derde keus
+                # ga op zoek naar kind B om mee te ruilen
+                for kind_B in range(total):
+                    if kind_A != kind_B:
+                        k_B = aanmeldingslijst['computer keuze'][kind_B]
+                        k1_B = k1Vect[kind_B]
+                        k2_B = k2Vect[kind_B]
+                        k3_B = k3Vect[kind_B]
+                        
+                        if k_B != k3_B and k_B != k2_B and k_B != k1_B: # kind B kreeg niet zijn eerste of tweede of derde keuze
+                        
+                            k3_B = k3Vect[kind_B]                            
+                            
+                            if k_B == k3_A:
+                                # kind B kreeg de 3de vookeur school van kind A                                
+                                # als kind A nu ook de 3de voorkeur school van kind B kreeg
+                                # kan je ruilen
+                                if k_A == k3_B:
+                                    # print('kind ' + str(kind_A) + ' kan 3de vrkr ruilen met ' + 'kind ' + str(kind_B));
+                                    aanmeldingslijst['computer keuze'][kind_B] = k_A
+                                    aanmeldingslijst['computer keuze'][kind_A] = k_B
+    
 
 def main(argv):
     
@@ -479,63 +566,10 @@ def main(argv):
     
     # stats before check for swaps
     get_stats(aanmeldingslijst, total)
+    
         
-    # optional: check if final swaps can improve !!
-    # TODO !
-    # for all kids die niet 1ste keus k1 toegewezen kregen: 
-    #     zoek ander kind die wel k1 kreeg maar voor hem was dat k2 of k3
-    #           dan swap(kruis conditie) 
-    for kind_A in range(total):
-        k_A = aanmeldingslijst['computer keuze'][kind_A]
-        if k_A > 0: # kreeg een school toebedeeld
-            k1_A = k1Vect[kind_A]
-            if k_A != k1_A: # kind A kreeg niet zijn eerste keus
-                # ga op zoek naar kind B om mee te ruilen
-                for kind_B in range(total):
-                    if kind_A != kind_B:
-                        k_B = aanmeldingslijst['computer keuze'][kind_B]
-                        k1_B = k1Vect[kind_B]
-                        
-                        if k_B != k1_B: # kind B kreeg niet zijn eerste keuze
-                        
-                            k2_B = k2Vect[kind_B]                            
-                            
-                            if k_B == k1_A:
-                                # kind B kreeg de vookeur school van kind A                                
-                                # als kind A nu ook de voorkeur school van kind B kreeg
-                                # kan je ruilen
-                                if k_A == k1_B:
-                                    print('kind ' + str(kind_A) + ' kan ruilen met ' 
-                                          + 'kind ' + str(kind_B));
-                                    aanmeldingslijst['computer keuze'][kind_B] = k_A
-                                    aanmeldingslijst['computer keuze'][kind_A] = k_B
-    for kind_A in range(total):
-        k_A = aanmeldingslijst['computer keuze'][kind_A]
-        if k_A > 0: # kreeg een school toebedeeld
-            k1_A = k1Vect[kind_A]
-            k2_A = k2Vect[kind_A]
-            if k_A != k2_A and k_A != k1_A: # kind A kreeg niet zijn eerste of tweede keus
-                # ga op zoek naar kind B om mee te ruilen
-                for kind_B in range(total):
-                    if kind_A != kind_B:
-                        k_B = aanmeldingslijst['computer keuze'][kind_B]
-                        k1_B = k1Vect[kind_B]
-                        k2_B = k2Vect[kind_B]
-                        
-                        if k_B != k2_B and k_B != k1_B: # kind B kreeg niet zijn eerste of tweede keuze
-                        
-                            k2_B = k2Vect[kind_B]                            
-                            
-                            if k_B == k2_A:
-                                # kind B kreeg de 2de vookeur school van kind A                                
-                                # als kind A nu ook de 2de voorkeur school van kind B kreeg
-                                # kan je ruilen
-                                if k_A == k2_B:
-                                    print('kind ' + str(kind_A) + ' kan 2de vrkr ruilen met ' 
-                                          + 'kind ' + str(kind_B));
-                                    aanmeldingslijst['computer keuze'][kind_B] = k_A
-                                    aanmeldingslijst['computer keuze'][kind_A] = k_B
-  
+    try_swaps(aanmeldingslijst, total)
+    print("after try swaps: ")
     # stats before check for swaps
     get_stats(aanmeldingslijst, total)
                         
