@@ -472,11 +472,37 @@ def main(argv):
     else:                
         print("unsupported variant")
         
+    print('percent_die_eerste_keus_kreeg ' + str(100.0* float(aantal_die_eerste_keus_kreeg)/float(total)))
+    print('percent_die_tweede_keus_kreeg ' + str(100.0* float(aantal_die_tweede_keus_kreeg)/float(total)))
+    print('percent_die_derde_keus_kreeg ' + str(100.0* float(aantal_die_derde_keus_kreeg)/float(total)))
+    print('percent_die_bot_vangt ' + str(100.0* float(aantal_die_bot_vangt)/float(total)))
+        
     # optional: check if final swaps can improve !!
     # TODO !
     # for all kids die niet 1ste keus k1 toegewezen kregen: 
-    #     zoek ander kind die k1 kreeg maar voor hem was dat k2 of k3
-    #           als voor hem reciprook, swap (kruis conditie) 
+    #     zoek ander kind die wel k1 kreeg maar voor hem was dat k2 of k3
+    #           dan swap(kruis conditie) 
+    for kind_A in range(total):
+        k_A = aanmeldingslijst['computer keuze'][kind_A]
+        if k_A > 0: # kreeg school toebedeeld
+            k1_A = k1Vect[kind_A]
+            if k_A != k1_A: # kind A kreeg niet zijn eerste keus
+                for kind_B in range(total):
+                    if kind_A != kind_B:
+                        k_B = aanmeldingslijst['computer keuze'][kind_B]
+                        k2_B = k2Vect[kind_B]
+                        k3_B = k3Vect[kind_B]
+                        
+                        if k_B == k_A:
+                            if k_B == k2_B or k_B == k3_B:
+                                print('kind ' + str(kind_A) + ' zou kunnen ruilen met ' 
+                                      + 'kind ' + str(kind_B));
+                                
+                            
+                            
+                            
+            
+     
         
     # statistieken
     aanmeldingslijst.to_csv('aanmeldingen.csv')    
