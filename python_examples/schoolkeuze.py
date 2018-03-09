@@ -484,19 +484,29 @@ def main(argv):
     #           dan swap(kruis conditie) 
     for kind_A in range(total):
         k_A = aanmeldingslijst['computer keuze'][kind_A]
-        if k_A > 0: # kreeg school toebedeeld
+        if k_A > 0: # kreeg een school toebedeeld
             k1_A = k1Vect[kind_A]
             if k_A != k1_A: # kind A kreeg niet zijn eerste keus
+                # ga op zoek naar kind B om mee te ruilen
                 for kind_B in range(total):
                     if kind_A != kind_B:
                         k_B = aanmeldingslijst['computer keuze'][kind_B]
-                        k2_B = k2Vect[kind_B]
-                        k3_B = k3Vect[kind_B]
+                        k1_B = k1Vect[kind_B]
                         
-                        if k_B == k_A:
-                            if k_B == k2_B or k_B == k3_B:
-                                print('kind ' + str(kind_A) + ' zou kunnen ruilen met ' 
-                                      + 'kind ' + str(kind_B));
+                        if k_B != k1_B: # kind B kreeg niet zijn eerste keuze
+                        
+                            k2_B = k2Vect[kind_B]
+                            k3_B = k3Vect[kind_B]
+                            
+                            if k_B == k1_A:
+                                # kind B kreeg de vookeur school van kind A
+                                
+                                # als kind A nu ook de voorkeur school van kind B kreeg
+                                # kan je ruilen
+                                if k_A == k1_B:
+                                    print('kind ' + str(kind_A) + ' zou kunnen ruilen met ' 
+                                          + 'kind ' + str(kind_B));
+                                    #TODO: ruil
                                 
                             
                             
