@@ -85,7 +85,8 @@ def main(argv):
         
         k3 = np.random.choice(scholen, p=prob_tmp)
         
-        matrix_row_list = [names.get_full_name()]
+        random_kind_naam = names.get_full_name()
+        matrix_row_list = [random_kind_naam]
         ind = 0
         for school in school_namen:
             if ind == k1:
@@ -98,7 +99,7 @@ def main(argv):
                 matrix_row_list.append(' ')
             ind +=1 
         
-        row=pd.Series([kind,int(k1),int(k2),int(k3),-1],columns) # - 1 betekent nog geen computer keus
+        row=pd.Series([random_kind_naam,int(k1),int(k2),int(k3),-1],columns) # - 1 betekent nog geen computer keus
         matrix_row = pd.Series(matrix_row_list,columns_matrix)
         aanmeldingsmatrix = aanmeldingsmatrix.append([matrix_row],ignore_index=True)
         aanmeldingslijst = aanmeldingslijst.append([row],ignore_index=True)
