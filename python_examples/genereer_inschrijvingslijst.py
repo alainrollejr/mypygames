@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import copy
 import random    
+import names
 
 
 def main(argv):
@@ -84,7 +85,7 @@ def main(argv):
         
         k3 = np.random.choice(scholen, p=prob_tmp)
         
-        matrix_row_list = [str(kind)]
+        matrix_row_list = [names.get_full_name()]
         ind = 0
         for school in school_namen:
             if ind == k1:
