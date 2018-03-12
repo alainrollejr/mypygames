@@ -1,6 +1,6 @@
 school,naam (optioneel),relatieve capaciteit (percent relatief tot totale capaciteit),kans dat kind hier naar toe wil (percent)
-1,don bosco,30,40
-2,sint bavo,20,30
-3,sint pieters,20,20
-4,sint paulus,10,2
-5,sint lievens,20,8
+1,school A,30,40
+2,school B,20,30
+3,school C,20,20
+4,school D,10,2
+5,school E,20,8
