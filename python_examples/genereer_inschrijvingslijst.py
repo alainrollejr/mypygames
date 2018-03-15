@@ -45,7 +45,7 @@ def main(argv):
     ind = 0
     columns_matrix = ['kind']
     for school in school_namen:
-        columns_matrix.append(str(school) + ' (q=' + str(int(vrije_plaatsen[ind]))+')')
+        columns_matrix.append(str(school) + ', q=' + str(int(vrije_plaatsen[ind])))
         ind += 1
     
     print(columns_matrix)
@@ -104,8 +104,8 @@ def main(argv):
         aanmeldingsmatrix = aanmeldingsmatrix.append([matrix_row],ignore_index=True)
         aanmeldingslijst = aanmeldingslijst.append([row],ignore_index=True)
         
-    aanmeldingslijst.to_csv('aanmeldingen_input.csv')
-    aanmeldingsmatrix.to_csv('aanmeldings_input_matrix.csv')
+    aanmeldingslijst.to_csv('aanmeldingen_input.csv', index=False)
+    aanmeldingsmatrix.to_csv('aanmeldings_input_matrix.csv', index=False)
     
     # visualiseer keuzes
     aanmeldingslijst['1ste keus'] = aanmeldingslijst['1ste keus'].astype(int)    
