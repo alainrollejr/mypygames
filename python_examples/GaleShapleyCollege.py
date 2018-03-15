@@ -18,13 +18,28 @@ class school(object):
     def __init__(self,naam,quotum):
         self.naam = naam
         self.quotum = quotum
-        self.lijst  = []
+        self.lijst  = [] # van studenten
+        self.lijst_rangschikking  = []  # van studenten
     
     def __repr__(self):
         return str(self.naam) + " q=" + str(self.quotum) + " lijst =" + str(self.lijst)
     
     def __str__(self):
         return str(self.naam) + " q=" + str(self.quotum) + " lijst =" + str(self.lijst)
+    
+class kind(object):
+    def __init__(self,naam,voorkeur):
+        self.naam = naam
+        self.voorkeur = voorkeur
+        self.lijst  = [] # van scholen
+        self.lijst_rangschikking  = [] # van scholen
+        
+    
+    def __repr__(self):
+        return str(self.naam) + " voorkeur=" + str(self.voorkeur) 
+    
+    def __str__(self):
+        return str(self.naam) + " voorkeur=" + str(self.voorkeur)
 
 def main(argv):
     
