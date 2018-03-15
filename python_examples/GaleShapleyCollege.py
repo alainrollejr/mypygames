@@ -14,6 +14,18 @@ import copy
 import random    
 import re
 
+class school(object):
+    def __init__(self,naam,quotum):
+        self.naam = naam
+        self.quotum = quotum
+        self.lijst  = []
+    
+    def __repr__(self):
+        return str(self.naam) + " q=" + str(self.quotum) + " lijst =" + str(self.lijst)
+    
+    def __str__(self):
+        return str(self.naam) + " q=" + str(self.quotum) + " lijst =" + str(self.lijst)
+
 def main(argv):
     
     parser = argparse.ArgumentParser(description='script dat optimale scholenkeuze simuleert')
@@ -27,22 +39,17 @@ def main(argv):
     
     print(matrix.head())
     
-    school_lijst_tmp = list(matrix)
-    school_lijst_tmp.remove('kind')
-    print(school_lijst_tmp)
+    scholen_tmp = list(matrix)
+    scholen_tmp.remove('kind')
+    print(scholen_tmp)
     
-    school_lijst = []
-    quota_lijst = []
-    for school in school_lijst_tmp:
-        t = re.split('[,=]',school)
-        #print(t)
-        school_lijst.append(t[0])
-        quota_lijst.append(int(t[2]))
+    lijst_van_scholen = []
+    for school_naam in scholen_tmp:
+        t = re.split('[,=]',school_naam)
+        lijst_van_scholen.append(school(naam = t[0], quotum = int(t[2])))
+ 
+    print(lijst_van_scholen)
         
-    print(school_lijst)
-    print(quota_lijst)
-    
-    
     
     
 if __name__ == "__main__":
