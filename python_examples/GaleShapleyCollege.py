@@ -15,8 +15,9 @@ import random
 import re
 
 class school(object):
-    def __init__(self,naam,quotum):
+    def __init__(self,naam,column_header_in_matrix,quotum):
         self.naam = naam
+        self.column_header_in_matrix = column_header_in_matrix
         self.quotum = quotum
         self.lijst  = [] # van studenten
         self.voorkeur  = []  # van studenten
@@ -39,6 +40,11 @@ class kind(object):
     
     def __str__(self):
         return str(self.naam) + " lijst=" + str(self.lijst)
+    
+    def add_school(school_obj, voorkeur):
+        self.lijst.append(school_obj)
+        self.voorkeur.append(voorkeur)
+        
 
 def main(argv):
     
@@ -60,13 +66,23 @@ def main(argv):
     alle_scholen = []
     for school_naam in scholen_tmp:
         t = re.split('[,=]',school_naam)
-        alle_scholen.append(school(naam = t[0], quotum = int(t[2])))
+        alle_scholen.append(school(naam = t[0],
+                                   column_header_in_matrix=school_naam,
+                                   quotum = int(t[2])))
  
     print(alle_scholen)
     
     alle_kinderen = []
     for index, row in matrix.iterrows():
-        alle_kinderen.append(kind(naam = row["kind"]))
+        print(row["kind"])
+        kind_obj = kind(naam = row["kind"])
+        
+        df = matrix[matrix['kind']==row['kind']]
+        nonnull_columns=df.columns[df.notnull().any()]
+        print(df[nonnull_columns])
+        
+        alle_kinderen.append(kind_obj)
+        
         
     print(alle_kinderen)
         

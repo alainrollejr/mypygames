@@ -96,7 +96,7 @@ def main(argv):
             elif ind == k3:
                 matrix_row_list.append(3)
             else:
-                matrix_row_list.append(' ')
+                matrix_row_list.append(np.nan)
             ind +=1 
         
         row=pd.Series([random_kind_naam,int(k1),int(k2),int(k3),-1],columns) # - 1 betekent nog geen computer keus
