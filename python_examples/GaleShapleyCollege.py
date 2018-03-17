@@ -35,10 +35,10 @@ class kind(object):
         
     
     def __repr__(self):
-        return str(self.naam) + " lijst=" + str(self.lijst) 
+        return str(self.naam) + " lijst=" + str(self.lijst) + "voorkeuren=" + str(self.voorkeur)
     
     def __str__(self):
-        return str(self.naam) + " lijst=" + str(self.lijst)
+        return str(self.naam) + " lijst=" + str(self.lijst) + "voorkeuren=" + str(self.voorkeur)
     
     def add_school(self,school_naam, voorkeur):
         self.lijst.append(school_naam)
@@ -81,7 +81,7 @@ def main(argv):
             i = 0
             for c in nonnull_columns:
                 if i > 0:
-                    kind_obj.add_school(school_naam=str(c), voorkeur = df[c])  
+                    kind_obj.add_school(school_naam=str(c), voorkeur = df[c].iloc[0])  
                 i +=1
             
             
@@ -91,7 +91,7 @@ def main(argv):
     print(alle_kinderen)
         
     
-    
+    #TODO: run selection algorithm
         
     
     
