@@ -40,8 +40,8 @@ class kind(object):
     def __str__(self):
         return str(self.naam) + " lijst=" + str(self.lijst)
     
-    def add_school(school_header, voorkeur):
-        self.lijst.append(school_header)
+    def add_school(school_naam, voorkeur):
+        self.lijst.append(school_naam)
         self.voorkeur.append(voorkeur)
         
 
@@ -77,15 +77,19 @@ def main(argv):
             
             df = matrix[matrix['kind']==row['kind']]
             nonnull_columns=df.columns[df.notnull().any()]
-            #nonnull_columns.remove('kind')
-            print(nonnull_columns)
             
-            """
+                       
+            
             print(df[nonnull_columns])
             
+            i = 0
             for c in nonnull_columns:
-                kind_obj.add_school(c, df[c])
-            """
+                if i > 0:
+                    print(c)
+                    print(df[c])
+#                    kind_obj.add_school(str(c), df[c]) # deze lookup van voorkeur werkt nog niet 
+                i +=1
+            
             
             alle_kinderen.append(kind_obj)
         
