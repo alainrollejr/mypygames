@@ -19,7 +19,7 @@ class school(object):
         self.naam = naam
         self.quotum = quotum
         self.lijst  = [] # van studenten
-        self.lijst_rangschikking  = []  # van studenten
+        self.voorkeur  = []  # van studenten
     
     def __repr__(self):
         return str(self.naam) + " q=" + str(self.quotum) + " lijst =" + str(self.lijst)
@@ -28,18 +28,17 @@ class school(object):
         return str(self.naam) + " q=" + str(self.quotum) + " lijst =" + str(self.lijst)
     
 class kind(object):
-    def __init__(self,naam,voorkeur):
+    def __init__(self,naam):
         self.naam = naam
-        self.voorkeur = voorkeur
         self.lijst  = [] # van scholen
-        self.lijst_rangschikking  = [] # van scholen
+        self.voorkeur  = [] # van scholen
         
     
     def __repr__(self):
-        return str(self.naam) + " voorkeur=" + str(self.voorkeur) 
+        return str(self.naam) + " lijst=" + str(self.lijst) 
     
     def __str__(self):
-        return str(self.naam) + " voorkeur=" + str(self.voorkeur)
+        return str(self.naam) + " lijst=" + str(self.lijst)
 
 def main(argv):
     
@@ -58,12 +57,21 @@ def main(argv):
     scholen_tmp.remove('kind')
     print(scholen_tmp)
     
-    lijst_van_scholen = []
+    alle_scholen = []
     for school_naam in scholen_tmp:
         t = re.split('[,=]',school_naam)
-        lijst_van_scholen.append(school(naam = t[0], quotum = int(t[2])))
+        alle_scholen.append(school(naam = t[0], quotum = int(t[2])))
  
-    print(lijst_van_scholen)
+    print(alle_scholen)
+    
+    alle_kinderen = []
+    for index, row in matrix.iterrows():
+        alle_kinderen.append(kind(naam = row["kind"]))
+        
+    print(alle_kinderen)
+        
+    
+    
         
     
     

@@ -2,3 +2,4 @@
 python_examples/aanmeldingen.csv
 python_examples/aanmeldings_input_matrix.csv
 python_examples/aanmeldingen_input.csv
+*.csv
