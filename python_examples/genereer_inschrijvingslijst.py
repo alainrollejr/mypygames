@@ -45,15 +45,25 @@ def main(argv):
     ind = 0
     columns_matrix = ['kind']
     for school in school_namen:
-        columns_matrix.append(str(school) + ', q=' + str(int(vrije_plaatsen[ind])))
+        columns_matrix.append(str(school))
         ind += 1
     
     print(columns_matrix)
     
+    # eerste rij is speciale rij met vrije plaatsen 
+    aanmeldingsmatrix = pd.DataFrame(columns=columns_matrix)
+    ind = 0    
+    matrix_row_list = ['vrije plaatsen']
+    for school in school_namen:
+        matrix_row_list.append(str(int(vrije_plaatsen[ind])))        
+        ind += 1
+    matrix_row = pd.Series(matrix_row_list,columns_matrix)
+    aanmeldingsmatrix = aanmeldingsmatrix.append([matrix_row],ignore_index=True)
+    
     # simuleer de aanmeldingen volgens populariteit aangegeven in school_lijst.csv
     columns = ['kind','1ste keus', '2de keus','3de keus','computer keuze']
     aanmeldingslijst = pd.DataFrame(columns=columns)
-    aanmeldingsmatrix = pd.DataFrame(columns=columns_matrix)
+    
     for kind in range(total):
         scholen = np.arange(0, aantal_scholen)
         prob_tmp = copy.deepcopy(prob)        
