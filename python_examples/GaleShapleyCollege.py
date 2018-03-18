@@ -39,12 +39,18 @@ class school(object):
             print("variant nog niet geimplementeerd")
         else:
             print("variant niet gesupporteerd")
+            
+    def weerhoud_vrijeplaatsen(self):
+        for index,kind_obj in enumerate(self.lijst):
+            if index < self.quotum:
+                kind_obj.rejected = False
     
 class kind(object):
     def __init__(self,naam):
         self.naam = naam
         self.lijst  = [] # van scholen
         self.voorkeur  = [] # van scholen
+        self.rejected = True
         
     
     def __repr__(self):
@@ -123,7 +129,7 @@ def main(argv):
     """
         Gale Shapley algorithme
         
-        Step1 : zet alle kinderen op lijst van de school van hun eerste keuze 
+        Step2 : zet alle kinderen op lijst van de school van hun eerste keuze 
     """
     K = 1
     for kind_obj in alle_kinderen:
@@ -134,8 +140,12 @@ def main(argv):
                 
     print(alle_scholen)    
       
+    """
+        step3: rangschik en weerhoud enkel toegelaten aantal (vrije plaatsen)
+    """
     for school_obj in alle_scholen:
         school_obj.sorteer_lijst(methode = variant)
+        school_obj.weerhoud_vrijeplaatsen()
         
     print("\n")
     print(alle_scholen)
