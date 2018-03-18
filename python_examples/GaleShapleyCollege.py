@@ -27,6 +27,10 @@ class school(object):
     def __str__(self):
         return str(self.naam) + " q=" + str(self.quotum) + " lijst =" + str(self.lijst)
     
+        
+    def add_kind(self, kind):
+        self.lijst.append(kind)
+    
 class kind(object):
     def __init__(self,naam):
         self.naam = naam
@@ -43,7 +47,13 @@ class kind(object):
     def add_school(self,school_naam, voorkeur):
         self.lijst.append(school_naam)
         self.voorkeur.append(voorkeur)
-        
+ 
+ 
+    def get_school_van_keuze(self, keuze):        
+        for index,shool in enumerate(self.lijst):
+            if self.voorkeur[index] == keuze:
+                return school
+       
 
 def main(argv):
     
@@ -57,7 +67,11 @@ def main(argv):
     matrix = pd.read_csv(path)
     
     print(matrix.head())
-    
+
+
+    """
+    haal school info uit input matrix
+    """    
     scholen_tmp = list(matrix)
     scholen_tmp.remove('kind')
     print(scholen_tmp)
@@ -69,6 +83,11 @@ def main(argv):
  
     print(alle_scholen)
     
+    
+        
+    """
+    haal info over kinderen uit input matrix
+    """    
     alle_kinderen = []
     for index, row in matrix.iterrows():
         if index > 0: # skip the first row with quota
@@ -91,8 +110,7 @@ def main(argv):
     print(alle_kinderen)
         
     
-    #TODO: run selection algorithm
-        
+  
     
     
 if __name__ == "__main__":
