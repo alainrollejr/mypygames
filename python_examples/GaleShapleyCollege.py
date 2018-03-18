@@ -44,6 +44,9 @@ class school(object):
         for index,kind_obj in enumerate(self.lijst):
             if index < self.quotum:
                 kind_obj.rejected = False
+            else:
+                kind_obj.rejected = True;
+                self.lijst.remove(kind_obj)
     
 class kind(object):
     def __init__(self,naam):
