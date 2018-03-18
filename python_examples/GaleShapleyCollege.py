@@ -50,9 +50,9 @@ class kind(object):
  
  
     def get_school_van_keuze(self, keuze):        
-        for index,shool in enumerate(self.lijst):
+        for index,s in enumerate(self.lijst):
             if self.voorkeur[index] == keuze:
-                return school
+                return s
        
 
 def main(argv):
@@ -110,7 +110,22 @@ def main(argv):
     print(alle_kinderen)
         
     
-  
+    """
+        Gale Shapley algorithme
+        
+        Step1 : zet alle kinderen op lijst van de school van hun eerste keuze 
+    """
+    K = 1
+    for kind_obj in alle_kinderen:
+        voorkeurschool_naam = kind_obj.get_school_van_keuze(K)
+        for school_obj in alle_scholen:
+            print(school_obj.naam)
+            print(voorkeurschool_naam) 
+            if school_obj.naam == voorkeurschool_naam:
+                school_obj.add_kind(kind_obj)
+                
+    print(alle_scholen)    
+      
     
     
 if __name__ == "__main__":
