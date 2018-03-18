@@ -19,8 +19,7 @@ class school(object):
         self.naam = naam
         self.quotum = quotum
         self.lijst  = [] # van studenten
-        self.voorkeur  = []  # van studenten
-    
+        
     def __repr__(self):
         return str(self.naam) + " q=" + str(self.quotum) + " lijst =" + str(self.lijst)
     
@@ -30,6 +29,16 @@ class school(object):
         
     def add_kind(self, kind):
         self.lijst.append(kind)
+        
+    def sorteer_lijst(self, methode):
+        if methode == 1:
+            # totaal random
+            random.shuffle(self.lijst)
+        elif methode == 2:
+            # school heeft lichte voorkeur voor kinderen die deze school een hoge voorkeur gaven
+            print("variant nog niet geimplementeerd")
+        else:
+            print("variant niet gesupporteerd")
     
 class kind(object):
     def __init__(self,naam):
@@ -63,6 +72,7 @@ def main(argv):
     args = vars(parser.parse_args())
     
     path = args['path']
+    variant = int(args['variant'])
     
     matrix = pd.read_csv(path)
     
@@ -119,14 +129,16 @@ def main(argv):
     for kind_obj in alle_kinderen:
         voorkeurschool_naam = kind_obj.get_school_van_keuze(K)
         for school_obj in alle_scholen:
-            print(school_obj.naam)
-            print(voorkeurschool_naam) 
             if school_obj.naam == voorkeurschool_naam:
                 school_obj.add_kind(kind_obj)
                 
     print(alle_scholen)    
       
-    
+    for school_obj in alle_scholen:
+        school_obj.sorteer_lijst(methode = variant)
+        
+    print("\n")
+    print(alle_scholen)
     
 if __name__ == "__main__":
     main(sys.argv)
