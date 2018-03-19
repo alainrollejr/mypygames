@@ -43,7 +43,11 @@ class school(object):
     def weerhoud_vrijeplaatsen(self):
         for index,kind_obj in enumerate(self.lijst):
             if index < self.quotum:
-                kind_obj.rejected = False
+                kind_obj.rejected = False                
+                for k in range(1,4):
+                    if self.naam == kind_obj.get_school_van_keuze(k):
+                        kind_obj.voorkeur_van_toegewezen_school = k
+                
             else:
                 kind_obj.rejected = True;
                 self.lijst.remove(kind_obj)
@@ -54,6 +58,7 @@ class kind(object):
         self.lijst  = [] # van scholen
         self.voorkeur  = [] # van scholen
         self.rejected = True
+        self.voorkeur_van_toegewezen_school = 0
         
     
     def __repr__(self):
@@ -166,6 +171,36 @@ def main(argv):
         
     print("\n")
     print(alle_scholen)
+    
+    """
+        statistieken
+    """
+    percent_kreeg_eerste_keus = 0
+    percent_kreeg_tweede_keus = 0
+    percent_kreeg_derde_keus = 0
+    percent_kreeg_niks = 0
+    
+    for kind_obj in alle_kinderen:
+        if kind_obj.voorkeur_van_toegewezen_school == 1:
+            percent_kreeg_eerste_keus += 1
+        elif kind_obj.voorkeur_van_toegewezen_school == 2:
+            percent_kreeg_tweede_keus += 1
+        elif kind_obj.voorkeur_van_toegewezen_school == 3:
+            percent_kreeg_derde_keus += 1
+        else:
+            percent_kreeg_niks += 1
+            
+    percent_kreeg_eerste_keus = 100.0 * float(percent_kreeg_eerste_keus)/len(alle_kinderen)
+    percent_kreeg_tweede_keus = 100.0 * float(percent_kreeg_tweede_keus)/len(alle_kinderen)
+    percent_kreeg_derde_keus = 100.0 * float(percent_kreeg_derde_keus)/len(alle_kinderen)
+    percent_kreeg_niks = 100.0 * float(percent_kreeg_niks)/len(alle_kinderen)
+    
+    print("resultaat:")
+    print("-----------")
+    print("1ste keus: " + str(percent_kreeg_eerste_keus))
+    print("2de keus: " + str(percent_kreeg_tweede_keus))
+    print("3de keus: " + str(percent_kreeg_derde_keus))
+    print("niks: " + str(percent_kreeg_niks))
     
 if __name__ == "__main__":
     main(sys.argv)
