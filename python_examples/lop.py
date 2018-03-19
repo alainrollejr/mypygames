@@ -40,22 +40,49 @@ class school(object):
         else:
             print("variant niet gesupporteerd")
             
-    def weerhoud_vrijeplaatsen(self):
+    def weerhoud_vrijeplaatsen(self, alle_scholen):
+        situation_improved = False
         for index,kind_obj in enumerate(self.lijst):
             if index < self.quotum:
-                
                 kind_obj.rejected = False 
+                
                 kind_obj.toegewezen_school = self.naam
                 for k in range(1,4):
                     if self.naam == kind_obj.get_school_van_keuze(k):
                         kind_obj.voorkeur_van_toegewezen_school = k
-                        print(str(self.naam) + " accepts " + str(kind_obj.naam) + " wiens voorkeur was " + str(k))
-                
+
+                        if kind_obj.voorkeur_van_toegewezen_school == 1:
+
+                            # kind kreeg school van eerste voorkeur, is tevreden en mag van alle andere lijsten af
+                            for school_obj in alle_scholen:
+                                if school_obj.naam == kind_obj.get_school_van_keuze(2):
+                                    try:
+                                        school_obj.lijst.remove(kind_obj)
+                                        situation_improved = True
+                                    except:
+                                        pass
+                                if school_obj.naam == kind_obj.get_school_van_keuze(3):
+                                    try:
+                                        school_obj.lijst.remove(kind_obj)
+                                        situation_improved = True
+                                    except:
+                                        pass
+                        elif kind_obj.voorkeur_van_toegewezen_school == 2:
+                            # kind krijgt tenminste school van tweede voorkeur, verwijder van school van derde voorkeur
+                            for school_obj in alle_scholen:
+                                if school_obj.naam == kind_obj.get_school_van_keuze(3):
+                                    try:
+                                        school_obj.lijst.remove(kind_obj)
+                                        situation_improved = True
+                                    except:
+                                        pass
+                    
             else:
                 #print(str(self.naam) + " rejecting " + str(kind_obj.naam))
                 kind_obj.rejected = True;
                 kind_obj.toegewezen_school = ''
                 kind_obj.voorkeur_van_toegewezen_school = 0
+        return situation_improved
     
 class kind(object):
     def __init__(self,naam):
@@ -88,6 +115,34 @@ class kind(object):
         for index,s in enumerate(self.lijst):
             if self.voorkeur[index] == keuze:
                 return s
+
+def statistieken(alle_kinderen):
+    percent_kreeg_eerste_keus = 0
+    percent_kreeg_tweede_keus = 0
+    percent_kreeg_derde_keus = 0
+    percent_kreeg_niks = 0
+    
+    for kind_obj in alle_kinderen:
+        if kind_obj.voorkeur_van_toegewezen_school == 1:
+            percent_kreeg_eerste_keus += 1
+        elif kind_obj.voorkeur_van_toegewezen_school == 2:
+            percent_kreeg_tweede_keus += 1
+        elif kind_obj.voorkeur_van_toegewezen_school == 3:
+            percent_kreeg_derde_keus += 1
+        else:
+            percent_kreeg_niks += 1
+            
+    percent_kreeg_eerste_keus = 100.0 * float(percent_kreeg_eerste_keus)/len(alle_kinderen)
+    percent_kreeg_tweede_keus = 100.0 * float(percent_kreeg_tweede_keus)/len(alle_kinderen)
+    percent_kreeg_derde_keus = 100.0 * float(percent_kreeg_derde_keus)/len(alle_kinderen)
+    percent_kreeg_niks = 100.0 * float(percent_kreeg_niks)/len(alle_kinderen)
+    
+    print("resultaat:")
+    print("-----------")
+    print("1ste keus: " + str(percent_kreeg_eerste_keus))
+    print("2de keus: " + str(percent_kreeg_tweede_keus))
+    print("3de keus: " + str(percent_kreeg_derde_keus))
+    print("niks: " + str(percent_kreeg_niks))
             
 def print_lijst_status_naar_matrix(alle_kinderen, alle_scholen, csv_naam):
   
@@ -192,86 +247,32 @@ def main(argv):
                             school_obj.add_kind(kind_obj)
     
     """
-        rangschik en weerhoud enkel toegelaten aantal (vrije plaatsen)
+        rangschik 
     """
     for school_obj in alle_scholen:
             school_obj.sorteer_lijst(methode = 1)
 
+    """
+        geef verschillende malen kans om tot hoogste keus te komen
+    """
     
-    maxiteraties = 3
+    improving = True
     iter = 0
-    
-    while iter < maxiteraties:
-        print(iter)       
-        
-        for kind_obj in alle_kinderen:
-            if kind_obj.rejected == False: # kind is weerhouden
-                if kind_obj.voorkeur_van_toegewezen_school == 1:
-                    # kind kreeg school van eerste voorkeur, is tevreden en mag van alle andere lijsten af
-                    for school_obj in alle_scholen:
-                        if school_obj.naam == kind_obj.get_school_van_keuze(2):
-                            try:
-                                print("->remove " + str(kind_obj.naam))
-                                school_obj.lijst.remove(kind_obj)
-                            except:
-                                pass
-                        if school_obj.naam == kind_obj.get_school_van_keuze(3):
-                            try:
-                                print("->remove " + str(kind_obj.naam))
-                                school_obj.lijst.remove(kind_obj)
-                            except:
-                                pass
-                elif kind_obj.voorkeur_van_toegewezen_school == 2:
-                    # kind krijgt tenminste school van tweede voorkeur, verwijder van school van derde voorkeur
-                    for school_obj in alle_scholen:
-                        if school_obj.naam == kind_obj.get_school_van_keuze(3):
-                            try:
-                                print("->remove " + str(kind_obj.naam))
-                                school_obj.lijst.remove(kind_obj)
-                            except:
-                                print("can't remove " + str(kind_obj.naam))
-                                pass
-                            
+    while improving == True:
+        print("iter " + str(iter)) 
+        improving = False                     
         for school_obj in alle_scholen:
-            school_obj.weerhoud_vrijeplaatsen()
-            
-        iter += 1
-        
+            situation_improved = school_obj.weerhoud_vrijeplaatsen(alle_scholen)  
+            if situation_improved == True:
+                improving = True
+        iter += 1        
+        statistieken(alle_kinderen)
+        print("improving: " + str(improving))
         
     print_lijst_status_naar_matrix(alle_kinderen, alle_scholen, 'output_matrix.csv')
         
-    #print("\n")
-    #print(alle_scholen)
     
-    """
-        statistieken
-    """
-    percent_kreeg_eerste_keus = 0
-    percent_kreeg_tweede_keus = 0
-    percent_kreeg_derde_keus = 0
-    percent_kreeg_niks = 0
-    
-    for kind_obj in alle_kinderen:
-        if kind_obj.voorkeur_van_toegewezen_school == 1:
-            percent_kreeg_eerste_keus += 1
-        elif kind_obj.voorkeur_van_toegewezen_school == 2:
-            percent_kreeg_tweede_keus += 1
-        elif kind_obj.voorkeur_van_toegewezen_school == 3:
-            percent_kreeg_derde_keus += 1
-        else:
-            percent_kreeg_niks += 1
-            
-    percent_kreeg_eerste_keus = 100.0 * float(percent_kreeg_eerste_keus)/len(alle_kinderen)
-    percent_kreeg_tweede_keus = 100.0 * float(percent_kreeg_tweede_keus)/len(alle_kinderen)
-    percent_kreeg_derde_keus = 100.0 * float(percent_kreeg_derde_keus)/len(alle_kinderen)
-    percent_kreeg_niks = 100.0 * float(percent_kreeg_niks)/len(alle_kinderen)
-    
-    print("resultaat:")
-    print("-----------")
-    print("1ste keus: " + str(percent_kreeg_eerste_keus))
-    print("2de keus: " + str(percent_kreeg_tweede_keus))
-    print("3de keus: " + str(percent_kreeg_derde_keus))
-    print("niks: " + str(percent_kreeg_niks))
+
     
 if __name__ == "__main__":
     main(sys.argv)
