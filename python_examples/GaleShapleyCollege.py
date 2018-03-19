@@ -9,6 +9,7 @@ import sys
 import argparse
 import pandas as pd
 import random    
+import numpy as np
 
 
 class school(object):
@@ -40,13 +41,17 @@ class school(object):
     def weerhoud_vrijeplaatsen(self):
         for index,kind_obj in enumerate(self.lijst):
             if index < self.quotum:
-                kind_obj.rejected = False                
+                kind_obj.rejected = False 
+                kind_obj.toegewezen_school = self.naam
                 for k in range(1,4):
                     if self.naam == kind_obj.get_school_van_keuze(k):
                         kind_obj.voorkeur_van_toegewezen_school = k
                 
             else:
+                print(str(self.naam) + " rejecting " + str(kind_obj.naam))
                 kind_obj.rejected = True;
+                kind_obj.toegewezen_school = ''
+                kind_obj.voorkeur_van_toegewezen_school = 0
                 self.lijst.remove(kind_obj)
     
 class kind(object):
@@ -56,6 +61,7 @@ class kind(object):
         self.voorkeur  = [] # van scholen
         self.rejected = True
         self.voorkeur_van_toegewezen_school = 0
+        self.toegewezen_school = ''
         
     
     def __repr__(self):
@@ -73,7 +79,38 @@ class kind(object):
         for index,s in enumerate(self.lijst):
             if self.voorkeur[index] == keuze:
                 return s
+            
+def print_lijst_status_naar_matrix(alle_kinderen, alle_scholen, csv_naam):
+  
+    columns_matrix = ['kind']
+    for school_obj in alle_scholen:
+        columns_matrix.append(str(school_obj.naam))
+    
        
+    # eerste rij is speciale rij met vrije plaatsen 
+    matrix = pd.DataFrame(columns=columns_matrix)
+      
+    matrix_row_list = ['vrije plaatsen']
+    for school_obj in alle_scholen:
+        matrix_row_list.append(str(int(school_obj.quotum)))        
+        
+    matrix_row = pd.Series(matrix_row_list,columns_matrix)
+    matrix = matrix.append([matrix_row],ignore_index=True)
+    
+    
+    for kind_obj in alle_kinderen:
+        matrix_row_list = [kind_obj.naam]
+        
+        for school_obj in alle_scholen:
+            if school_obj.naam == kind_obj.toegewezen_school:
+                matrix_row_list.append(str(kind_obj.voorkeur_van_toegewezen_school))
+            else:
+                matrix_row_list.append(np.NaN)
+        
+        matrix_row = pd.Series(matrix_row_list,columns_matrix)
+        matrix = matrix.append([matrix_row],ignore_index=True)
+        
+    matrix.to_csv(csv_naam, index=False)
 
 def main(argv):
     
@@ -163,7 +200,7 @@ def main(argv):
         else:
             K +=1 
         
-        
+    print_lijst_status_naar_matrix(alle_kinderen, alle_scholen, 'output_matrix.csv')
         
     #print("\n")
     #print(alle_scholen)
