@@ -131,24 +131,38 @@ def main(argv):
     
     """
         Gale Shapley algorithme
-        
-        Step2 : zet alle kinderen op lijst van de school van hun eerste keuze 
     """
+    
     K = 1
-    for kind_obj in alle_kinderen:
-        voorkeurschool_naam = kind_obj.get_school_van_keuze(K)
+    stop = False
+    
+    while stop == False:
+    
+        """
+            voeg kinderen toe aan lijst van school van hune K-de keuze
+        """
+        for kind_obj in alle_kinderen:
+            if kind_obj.rejected == True:
+                voorkeurschool_naam = kind_obj.get_school_van_keuze(K)
+                for school_obj in alle_scholen:
+                    if school_obj.naam == voorkeurschool_naam:
+                        school_obj.add_kind(kind_obj)
+                        
+        print(alle_scholen)    
+          
+        """
+            rangschik en weerhoud enkel toegelaten aantal (vrije plaatsen)
+        """
         for school_obj in alle_scholen:
-            if school_obj.naam == voorkeurschool_naam:
-                school_obj.add_kind(kind_obj)
-                
-    print(alle_scholen)    
-      
-    """
-        step3: rangschik en weerhoud enkel toegelaten aantal (vrije plaatsen)
-    """
-    for school_obj in alle_scholen:
-        school_obj.sorteer_lijst(methode = variant)
-        school_obj.weerhoud_vrijeplaatsen()
+            school_obj.sorteer_lijst(methode = variant)
+            school_obj.weerhoud_vrijeplaatsen()
+            
+        if K == 3:
+            stop = True
+        else:
+            K +=1 
+        
+        
         
     print("\n")
     print(alle_scholen)
