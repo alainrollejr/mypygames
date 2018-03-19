@@ -76,12 +76,6 @@ class school(object):
                                         situation_improved = True
                                     except:
                                         pass
-                    
-            else:
-                #print(str(self.naam) + " rejecting " + str(kind_obj.naam))
-                kind_obj.rejected = True;
-                kind_obj.toegewezen_school = ''
-                kind_obj.voorkeur_van_toegewezen_school = 0
         return situation_improved
     
 class kind(object):
