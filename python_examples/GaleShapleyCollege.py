@@ -34,7 +34,9 @@ class school(object):
             random.shuffle(self.lijst)
         elif methode == 2:
             # school heeft lichte voorkeur voor kinderen die deze school een hoge voorkeur gaven
-            print("variant nog niet geimplementeerd")
+            random.shuffle(self.lijst) # shuffle nog steeds belangrijk omwille van gelijke scores
+            self.lijst.sort(key=lambda x: x.get_voorkeur(self.naam), reverse=False)
+            
         else:
             print("variant niet gesupporteerd")
             
@@ -73,6 +75,12 @@ class kind(object):
     def add_school(self,school_naam, voorkeur):
         self.lijst.append(school_naam)
         self.voorkeur.append(voorkeur)
+        
+    def get_voorkeur(self, school_naam):
+        for index,s in enumerate(self.lijst):
+            if self.lijst[index] == school_naam:
+                return self.voorkeur[index]
+        
  
  
     def get_school_van_keuze(self, keuze):        
