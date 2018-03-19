@@ -7,12 +7,9 @@ Created on Thu Mar 15 18:32:45 2018
 
 import sys
 import argparse
-import numpy as np
-import matplotlib.pyplot as plt
 import pandas as pd
-import copy
 import random    
-import re
+
 
 class school(object):
     def __init__(self,naam,quotum):
@@ -98,14 +95,14 @@ def main(argv):
     """    
     scholen_tmp = list(matrix)
     scholen_tmp.remove('kind')
-    print(scholen_tmp)
+    
     
     alle_scholen = []
     for school_naam in scholen_tmp:
         alle_scholen.append(school(naam = school_naam,
                                    quotum = matrix[school_naam].iloc[0]))
  
-    print(alle_scholen)
+    #print(alle_scholen)
     
     
         
@@ -114,8 +111,7 @@ def main(argv):
     """    
     alle_kinderen = []
     for index, row in matrix.iterrows():
-        if index > 0: # skip the first row with quota
-            print(row["kind"])
+        if index > 0: # skip the first row with quota            
             kind_obj = kind(naam = row["kind"])
             
             df = matrix[matrix['kind']==row['kind']]
@@ -131,7 +127,7 @@ def main(argv):
             alle_kinderen.append(kind_obj)
         
         
-    print(alle_kinderen)
+    #print(alle_kinderen)
         
     
     """
@@ -153,7 +149,7 @@ def main(argv):
                     if school_obj.naam == voorkeurschool_naam:
                         school_obj.add_kind(kind_obj)
                         
-        print(alle_scholen)    
+        #print(alle_scholen)    
           
         """
             rangschik en weerhoud enkel toegelaten aantal (vrije plaatsen)
@@ -169,8 +165,8 @@ def main(argv):
         
         
         
-    print("\n")
-    print(alle_scholen)
+    #print("\n")
+    #print(alle_scholen)
     
     """
         statistieken
