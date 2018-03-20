@@ -101,14 +101,36 @@ class kind(object):
     def get_voorkeur(self, school_naam):
         for index,s in enumerate(self.lijst):
             if self.lijst[index] == school_naam:
-                return self.voorkeur[index]
-        
+                return self.voorkeur[index]   
  
  
     def get_school_van_keuze(self, keuze):        
         for index,s in enumerate(self.lijst):
             if self.voorkeur[index] == keuze:
                 return s
+            
+    def probeer_ruil_met(self, ander_kind):
+        success = False
+        if self.voorkeur_van_toegewezen_school > 1:
+            if ander_kind.voorkeur_van_toegewezen_school > 1:
+                if self.naam != ander_kind.naam:
+                    
+                    # probeer ruil om eerste keus te bekomen voor beiden
+                    self_eerste_keus = self.get_school_van_keuze(1)
+                    school_die_ander_kreeg = ander_kind.toegewezen_school
+                    if self_eerste_keus == school_die_ander_kreeg:
+                        ander_eerste_keus = ander_kind.get_school_van_keuze(1)
+                        if self.toegewezen_school == ander_eerste_keus:
+                            print("ruil " + str(self.naam) + " met " + str(ander_kind.naam))
+                            ander_kind.toegewezen_school = self.toegewezen_school
+                            self.toegewezen_school = school_die_ander_kreeg
+                            self.voorkeur_van_toegewezen_school = 1
+                            ander_kind.voorkeur_van_toegewezen_school = 1
+                            success = True
+        return success
+                            
+                
+                    
 
 def statistieken(alle_kinderen):
     percent_kreeg_eerste_keus = 0
@@ -263,7 +285,16 @@ def main(argv):
         statistieken(alle_kinderen)
         print("improving: " + str(improving))
         
-    print_lijst_status_naar_matrix(alle_kinderen, alle_scholen, 'output_matrix.csv')
+    print_lijst_status_naar_matrix(alle_kinderen, alle_scholen, 'output_matrix_lop_zonder_ruil.csv')
+        
+    # detect and correct swaps
+    for kind_A in alle_kinderen:
+        for kind_B in alle_kinderen:
+            kind_A.probeer_ruil_met(kind_B)
+            
+    statistieken(alle_kinderen)
+        
+    print_lijst_status_naar_matrix(alle_kinderen, alle_scholen, 'output_matrix_lop.csv')
         
     
 
