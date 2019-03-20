@@ -52,14 +52,14 @@ def reward(y,a):
 
 def transition_possible(r_candidate,s,s_prime_candidate,x,y,a):    
     s_prime_calculated = s_prime(s,x,y,a)
-    if s_prime_candidate != s_prime_calculated:
+    if np.array_equal(s_prime_candidate,s_prime_calculated) == False:
         return False  
     if r_candidate != reward(y,a):
         return False
     return True
 
 # calculate p(s',r | s, a)
-def get_mdp_prob(s_prime, r, s, a):
+def mdp_prob(s_prime, r, s, a):
     p = 0
     for x1 in range(MAX_CARS_ON_LOCATION):
         for x2 in range(MAX_CARS_ON_LOCATION):
@@ -67,13 +67,35 @@ def get_mdp_prob(s_prime, r, s, a):
                 for y2 in range(MAX_CARS_ON_LOCATION):
                     x = np.array([x1,x2])
                     y = np.array([y1, y2])                    
-                    if transition_possible(r,s,s_prime,x,y,a):
+                    if transition_possible(r,s,s_prime,x,y,a) == True:
                         p += p_x1(x1)*p_x2(x2)*p_y1(y1)*p_y2(y2)
     return p
+
+def build_mdp():
+    state_space = []
+    for n1 in range(1,MAX_CARS_ON_LOCATION):
+        for n2 in range(1,MAX_CARS_ON_LOCATION):
+            state_space.append(np.array([n1,n2]))
+            
+    mdp = []
+    for a in range(5):
+        for r in range(-10,50,2):
+            for s in state_space:
+                for s_prime in state_space:
+                    p = mdp_prob(s_prime, r, s, a)
+                    if p > 0.0:
+                        mdp.append([s_prime, s, r, a,p])
+    return mdp
+                        
+                    
+        
+    
     
 
 def main(argv):
-    print('p_y2 test ' + str(p_y2(3)))
+    mdp = build_mdp()
+    print('mdp:' + str(mdp))
+    
     
     
 if __name__ == "__main__":
