@@ -7,6 +7,7 @@ Created on Mon Mar 18 18:31:43 2019
 
 import os
 import sys
+import pickle
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -117,6 +118,10 @@ def main(argv):
     
     mdp = build_mdp()
     print('mdp:' + str(mdp))
+    
+    with open('mdp.data', 'wb') as filehandle:  
+        # store the data as binary data stream
+        pickle.dump(mdp, filehandle)
     
     
     
