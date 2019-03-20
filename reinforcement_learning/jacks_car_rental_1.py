@@ -14,7 +14,7 @@ import argparse
 import numpy as np
 from scipy.special import factorial
 
-MAX_CARS_ON_LOCATION = 20
+MAX_CARS_ON_LOCATION = 10
 MAX_TRANSFER = 5
 REWARD_FOR_RENTAL = 10
 REWARD_FOR_TRANSFER = -2
@@ -62,18 +62,19 @@ def transition_possible(r_candidate,s,s_prime_candidate,x,y,a):
 # calculate p(s',r | s, a)
 def mdp_prob(s_prime, r, s, a):
     p = 0
-    for x1 in range(MAX_CARS_ON_LOCATION):
-        if p_x1(x1) > PRACTICAL_PROB_THRESHOLD:
-            for x2 in range(MAX_CARS_ON_LOCATION):
-                if p_x1(x1)*p_x2(x2) > PRACTICAL_PROB_THRESHOLD:
-                    for y1 in range(MAX_CARS_ON_LOCATION):
-                        if p_x1(x1)*p_x2(x2)*p_y1(y1) > PRACTICAL_PROB_THRESHOLD:
-                            for y2 in range(MAX_CARS_ON_LOCATION):
-                                if p_x1(x1)*p_x2(x2)*p_y1(y1)*p_y2(y2) > PRACTICAL_PROB_THRESHOLD:
-                                    x = np.array([x1,x2])
-                                    y = np.array([y1, y2])                    
-                                    if transition_possible(r,s,s_prime,x,y,a) == True:
-                                        p += p_x1(x1)*p_x2(x2)*p_y1(y1)*p_y2(y2)
+    for y1 in range(MAX_CARS_ON_LOCATION):
+        if p_y1(y1) > PRACTICAL_PROB_THRESHOLD:
+            for y2 in range(MAX_CARS_ON_LOCATION):
+                if p_y1(y1)*p_y2(y2) > PRACTICAL_PROB_THRESHOLD:
+                    if r == reward(np.array([y1,y2]),a):
+                        for x1 in range(MAX_CARS_ON_LOCATION):
+                            if p_x1(x1)*p_y2(y2)*p_y1(y1) > PRACTICAL_PROB_THRESHOLD:
+                                for x2 in range(MAX_CARS_ON_LOCATION):
+                                    if p_x1(x1)*p_x2(x2)*p_y1(y1)*p_y2(y2) > PRACTICAL_PROB_THRESHOLD:
+                                        x = np.array([x1,x2])
+                                        y = np.array([y1, y2])                    
+                                        if transition_possible(r,s,s_prime,x,y,a) == True:
+                                            p += p_x1(x1)*p_x2(x2)*p_y1(y1)*p_y2(y2)
     return p
 
 def build_mdp():
@@ -84,18 +85,19 @@ def build_mdp():
             
     mdp = []
     cnt=0
-    possibilities = 11*30*400*400
+    possibilities = 11*30*pow(MAX_CARS_ON_LOCATION,4)
     for a in range(-5,6,1):
         for r in range(-10,50,2):
             for s in state_space:
                 for s_prime in state_space:
                     cnt +=1
-                    print(str(cnt)+ "/"+ str(possibilities) + str([s_prime, s, r, a]),end='\n'),
+                    #print(cnt,"/",possibilities,[s_prime, s, r, a],end='\n')
                     p = mdp_prob(s_prime, r, s, a)
                     if p > 0.0:
                         mdp_element = [s_prime, s, r, a,p]
                         mdp.append(mdp_element)
                         print('\n')
+                        print('mdp scan ',100.0*cnt/possibilities,' percent complete', end='\n')
                         print("mdp grown with " + str(mdp_element))
     return mdp
                         
