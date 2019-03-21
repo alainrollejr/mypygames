@@ -72,6 +72,12 @@ def visualise_value_function():
     # Add a color bar which maps values to colors.
     fig.colorbar(surf, shrink=0.5, aspect=5)
     plt.show() 
+    
+    fig = plt.figure()
+    plt.contourf(X, Y, Z, cmap=cm.coolwarm)
+    plt.colorbar()
+    plt.show() 
+    
             
             
     
