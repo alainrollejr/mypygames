@@ -15,6 +15,8 @@ import argparse
 import numpy as np
 from scipy.special import factorial
 
+GAMMA = 0.9 # discount factor
+POLICY_THETA = 0.01 # threshold on deviation of V from true V for policy
 MAX_CARS_ON_LOCATION = 10
 MAX_TRANSFER = 2
 REWARD_FOR_RENTAL = 10
@@ -26,11 +28,22 @@ LAMBDA_X2 = 2/2.0
 LAMBDA_Y1 = 3/2.0
 LAMBDA_Y2 = 4/2.0
 
+# ([s_prime, s, r, a,p])
+S_PRIME_IND = 0
+S_IND = 1
+R_IND = 2
+A_IND = 3
+P_IND = 4
+
+
 # global values
 y1_range = []
 y2_range = []
 x1_range = []
 x2_range = []
+S = [] # state space
+pi = [] # policy
+V = [] # state value function
 
 # function to get unique values 
 def np_array_in_list(list,s):     
@@ -169,19 +182,70 @@ def build_mdp():
                                 
                     elements = mdp_prob(s_prime_c, s, a)
                     if len(elements) > 0:
-                        mdp.append(elements)   
-                        print("mdp grown with " + str(elements))
-                        print("\n")
-                        # on every update store the mdp as currently known
-                        with open('mdp.data', 'wb') as filehandle: 
-                            pickle.dump(mdp, filehandle)
+                        for element in elements:
+                            mdp.append(element)   
+                            print("mdp grown with " + str(elements))
+                            print("\n")
+                            # on every update store the mdp as currently known
+                            with open('mdp.data', 'wb') as filehandle: 
+                                pickle.dump(mdp, filehandle)
     return mdp
-                        
+                      
+def build_state_space():    
+    for n1 in range(0,MAX_CARS_ON_LOCATION+1,1):
+        for n2 in range(0,MAX_CARS_ON_LOCATION+1,1):
+            S.append([n1,n2])
+            
+def init_pi():
+    for n1 in range(0,MAX_CARS_ON_LOCATION+1,1):
+        for n2 in range(0,MAX_CARS_ON_LOCATION+1,1):
+            pi.append(0) # a = 0 as initial default
+
+def init_valuefunction():
+    for n1 in range(0,MAX_CARS_ON_LOCATION+1,1):
+        for n2 in range(0,MAX_CARS_ON_LOCATION+1,1):
+            V.append(0) # v = 0 as initial default         
+def index_for_s(s):
+    ind = 0
+    for n1 in range(0,MAX_CARS_ON_LOCATION+1,1):
+        for n2 in range(0,MAX_CARS_ON_LOCATION+1,1):
+            if s == [n1,n2]:
+                return ind
+            ind += 1
+    return -1
+            
+
                     
-def policy_evaluation(pi):
+def policy_evaluation(mdp):
     # pi is a table with a deterministic action for every state in the state space
     # (ordered in the same way as the state space)
-    return True
+    eval_iter = 0
+    while True:        
+        delta = 0
+        
+        for (index,s) in enumerate(S):
+            v = V[index]
+            action_under_pi = pi[index]
+            new_v = 0
+            for m in mdp:
+                if (m[A_IND] == action_under_pi) and (m[S_IND] == s):
+                    p = m[P_IND]
+                    r = m[R_IND]
+                    s_prime = m[S_PRIME_IND]
+                    s_prime_ind = index_for_s(s_prime)
+                    if s_prime_ind >= 0:
+                        v_prime = V[s_prime_ind]                    
+                        new_v += p*(r + GAMMA*v_prime)
+            V[index] = new_v
+            delta = max(delta,abs(v-new_v))
+            
+        print('eval_iter ',eval_iter, 'delta ', delta)
+        
+        if delta < POLICY_THETA:
+            break
+        eval_iter += 1
+        
+    
     
     
 
@@ -202,6 +266,13 @@ def main(argv):
         mdp = pickle.load(open(path, 'rb'))
         
     print(mdp)
+    
+    build_state_space()
+    init_pi()
+    init_valuefunction()
+    
+    policy_evaluation(mdp)
+    
     
     
     
