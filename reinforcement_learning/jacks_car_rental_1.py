@@ -9,6 +9,11 @@ import os
 import sys
 import pickle
 
+from mpl_toolkits.mplot3d import Axes3D
+import matplotlib.pyplot as plt
+from matplotlib import cm
+from matplotlib.ticker import LinearLocator, FormatStrFormatter
+
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import argparse
@@ -44,6 +49,32 @@ x2_range = []
 S = [] # state space
 pi = [] # policy
 V = [] # state value function
+
+def visualise_value_function():
+    fig = plt.figure()
+    ax = fig.gca(projection='3d')
+    
+    ind = 0
+    X = np.empty([MAX_CARS_ON_LOCATION+1,1])
+    Y = np.empty([MAX_CARS_ON_LOCATION+1,1])
+    Z = np.empty([(MAX_CARS_ON_LOCATION+1),(MAX_CARS_ON_LOCATION+1)])
+    for n1 in range(0,MAX_CARS_ON_LOCATION+1,1):
+        for n2 in range(0,MAX_CARS_ON_LOCATION+1,1):
+            X[n1] = n1
+            Y[n2] = n2
+            Z[n1][n2] = V[ind]
+            ind += 1
+            
+    X, Y = np.meshgrid(X, Y)
+    print(X)
+    surf = ax.plot_surface(X, Y, Z, cmap=cm.coolwarm,
+                       linewidth=0, antialiased=False)         
+    # Add a color bar which maps values to colors.
+    fig.colorbar(surf, shrink=0.5, aspect=5)
+    plt.show() 
+            
+            
+    
 
 # function to get unique values 
 def np_array_in_list(list,s):     
@@ -272,6 +303,7 @@ def main(argv):
     init_valuefunction()
     
     policy_evaluation(mdp)
+    visualise_value_function()
     
     
     
