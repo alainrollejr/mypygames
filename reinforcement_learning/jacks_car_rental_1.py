@@ -15,22 +15,31 @@ import argparse
 import numpy as np
 from scipy.special import factorial
 
-MAX_CARS_ON_LOCATION = 20
-MAX_TRANSFER = 5
+MAX_CARS_ON_LOCATION = 10
+MAX_TRANSFER = 2
 REWARD_FOR_RENTAL = 10
 REWARD_FOR_TRANSFER = -2
 MAX_SCAN_S_PRIME = 3
 PRACTICAL_PROB_THRESHOLD = 0.01 # we won't care about events that have less probability than this
-LAMBDA_X1 = 3
-LAMBDA_X2 = 2
-LAMBDA_Y1 = 3
-LAMBDA_Y2 = 4
+LAMBDA_X1 = 3/2.0
+LAMBDA_X2 = 2/2.0
+LAMBDA_Y1 = 3/2.0
+LAMBDA_Y2 = 4/2.0
 
 # global values
 y1_range = []
 y2_range = []
 x1_range = []
 x2_range = []
+
+# function to get unique values 
+def np_array_in_list(list,s):     
+    for element in list:
+        if np.array_equal(element,s) == True:
+            return True
+    return False
+    
+    
 
 def poisson(lmbd, k):
     return np.exp(-lmbd)*np.power(lmbd,k)/factorial(k)
@@ -63,6 +72,8 @@ def s_prime(s,x,y,a):
 def truncate_s(s):
     s[0] = min(s[0], MAX_CARS_ON_LOCATION)
     s[1] = min(s[1], MAX_CARS_ON_LOCATION)
+    s[0] = max(s[0], 0)
+    s[1] = max(s[1], 0)
     return s
     
 
@@ -122,27 +133,33 @@ def build_mdp():
             
     mdp = []
     cnt=0
-    possibilities = 11*pow(MAX_CARS_ON_LOCATION,2)*pow(2*MAX_SCAN_S_PRIME+1,2)
-    for a in range(-MAX_TRANSFER,MAX_TRANSFER+1,1):
-        for s in state_space:
-            expected_s_prime = s_prime(s,np.array([LAMBDA_X1,LAMBDA_X2]),
-                                       np.array([LAMBDA_Y1,LAMBDA_Y2]),a)
-            s_prime_candidates = []
-            for i in range(-MAX_SCAN_S_PRIME,MAX_SCAN_S_PRIME+1,1):
-                for j in range(-MAX_SCAN_S_PRIME,MAX_SCAN_S_PRIME+1,1):
-                    s_prime_candidates.append(truncate_s(expected_s_prime + np.array([i,j])))       
+    possibilities = (2*MAX_TRANSFER+1)*pow(MAX_CARS_ON_LOCATION,2)     
+    for s in state_space:
+        for a in range(-MAX_TRANSFER,MAX_TRANSFER+1,1):
+            cnt +=1   
+            if ((a < 0) and (abs(a) <= s[1])) or ((a >= 0) and (abs(a) <= s[0])):
             
-            
-            for s_prime_c in s_prime_candidates:
-                cnt +=1                
-                elements = mdp_prob(s_prime_c, s, a)
-                if len(elements) > 0:
-                    mdp.append(elements)                
-                    print('mdp scan ',100.0*cnt/possibilities,' percent complete', end='\n')
-                    print("mdp grown with " + str(elements))
-                    # on every update store the mdp as currently known
-                    with open('mdp.data', 'wb') as filehandle: 
-                        pickle.dump(mdp, filehandle)
+                expected_s_prime = truncate_s(s_prime(s,np.array([LAMBDA_X1,LAMBDA_X2]),
+                                           np.array([LAMBDA_Y1,LAMBDA_Y2]),a))
+                print('considering action ', a, 'to take ', s,'->', expected_s_prime,' mdp scan ',100.0*cnt/possibilities,' percent complete')
+                s_prime_candidates = []
+                for i in range(-MAX_SCAN_S_PRIME,MAX_SCAN_S_PRIME+1,1):
+                    for j in range(-MAX_SCAN_S_PRIME,MAX_SCAN_S_PRIME+1,1):
+                        candidate = truncate_s(expected_s_prime + np.array([i,j]))
+                        if np_array_in_list(s_prime_candidates,candidate) == False:
+                            s_prime_candidates.append(candidate)       
+                print(s_prime_candidates)
+                
+                
+                for s_prime_c in s_prime_candidates:
+                                
+                    elements = mdp_prob(s_prime_c, s, a)
+                    if len(elements) > 0:
+                        mdp.append(elements)   
+                        print("mdp grown with " + str(elements))
+                        # on every update store the mdp as currently known
+                        with open('mdp.data', 'wb') as filehandle: 
+                            pickle.dump(mdp, filehandle)
     return mdp
                         
                     
@@ -167,6 +184,9 @@ def main(argv):
     
     # on with the real job
     mdp = build_mdp()
+    
+    #if you already have the mdp precalculated, load it from file
+    mdp = pickle.load(open('mdp.data', 'rb'))
     
     
     
