@@ -35,7 +35,7 @@ x2_range = []
 # function to get unique values 
 def np_array_in_list(list,s):     
     for element in list:
-        if np.array_equal(element,s) == True:
+        if element==s:
             return True
     return False
 def state_is_negative(s):
@@ -70,7 +70,7 @@ def p_y2(k):
     2 most important transition equations
 """
 def s_prime(s,x,y,a):
-    s_prime = np.array([0,0])
+    s_prime = [0,0]
     s_prime[0] = min(s[0] + x[0] - y[0] - a,MAX_CARS_ON_LOCATION)
     s_prime[1] = min(s[1] + x[1] - y[1] + a,MAX_CARS_ON_LOCATION)
     return s_prime
@@ -88,7 +88,7 @@ def reward(y,a):
 
 def transition_possible(s,s_prime_candidate,x,y,a):    
     s_prime_calculated = s_prime(s,x,y,a)
-    if np.array_equal(s_prime_candidate,s_prime_calculated) == False:
+    if s_prime_candidate != s_prime_calculated:
         return False  
     return True
 
@@ -97,12 +97,12 @@ def mdp_prob(s_prime, s, a):
     mdp_elements = []
     for y1 in y1_range:        
         for y2 in y2_range:            
-            r = reward(np.array([y1,y2]),a)
+            r = reward([y1,y2],a)
             p = 0
             for x1 in x1_range:
                 for x2 in x2_range:                    
-                    x = np.array([x1,x2])
-                    y = np.array([y1, y2])                    
+                    x = [x1,x2]
+                    y = [y1, y2]                 
                     if transition_possible(s,s_prime,x,y,a) == True:
                         p += p_x1(x1)*p_x2(x2)*p_y1(y1)*p_y2(y2)                        
                         if state_is_negative(s_prime) == True:
@@ -141,7 +141,7 @@ def build_mdp():
     state_space = []
     for n1 in range(0,MAX_CARS_ON_LOCATION+1,1):
         for n2 in range(0,MAX_CARS_ON_LOCATION+1,1):
-            state_space.append(np.array([n1,n2]))
+            state_space.append([n1,n2])
     define_reasonable_xy_ranges()        
     mdp = []
     cnt=0
@@ -151,16 +151,18 @@ def build_mdp():
             cnt +=1   
             if ((a < 0) and (abs(a) <= s[1])) or ((a >= 0) and (abs(a) <= s[0])):
             
-                expected_s_prime = s_prime(s,np.array([LAMBDA_X1,LAMBDA_X2]),
-                                           np.array([LAMBDA_Y1,LAMBDA_Y2]),a)
+                expected_s_prime = s_prime(s,[LAMBDA_X1,LAMBDA_X2],
+                                           [LAMBDA_Y1,LAMBDA_Y2],a)
                 print('considering action ', a, 'to take ', s,'->', expected_s_prime,' mdp scan ',100.0*cnt/possibilities,' percent complete')
                 s_prime_candidates = []
                 for i in range(-MAX_SCAN_S_PRIME,MAX_SCAN_S_PRIME+1,1):
                     for j in range(-MAX_SCAN_S_PRIME,MAX_SCAN_S_PRIME+1,1):
-                        candidate = expected_s_prime + np.array([i,j])
+                        candidate = [0,0]
+                        candidate[0] = expected_s_prime[0] + i
+                        candidate[1] = expected_s_prime[1] + j
                         if np_array_in_list(s_prime_candidates,candidate) == False:
                             s_prime_candidates.append(candidate)       
-                #print(s_prime_candidates)
+                print(s_prime_candidates)
                 
                 
                 for s_prime_c in s_prime_candidates:
@@ -176,7 +178,10 @@ def build_mdp():
     return mdp
                         
                     
-        
+def policy_evaluation(pi):
+    # pi is a table with a deterministic action for every state in the state space
+    # (ordered in the same way as the state space)
+    return True
     
     
 
