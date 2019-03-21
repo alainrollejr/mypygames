@@ -38,7 +38,13 @@ def np_array_in_list(list,s):
         if np.array_equal(element,s) == True:
             return True
     return False
-    
+def state_is_negative(s):
+    if s[0] < 0:
+        return True
+    if s[1] < 0:
+        return True
+    return False
+
     
 
 def poisson(lmbd, k):
@@ -98,7 +104,13 @@ def mdp_prob(s_prime, s, a):
                     x = np.array([x1,x2])
                     y = np.array([y1, y2])                    
                     if transition_possible(s,s_prime,x,y,a) == True:
-                        p += p_x1(x1)*p_x2(x2)*p_y1(y1)*p_y2(y2)
+                        p += p_x1(x1)*p_x2(x2)*p_y1(y1)*p_y2(y2)                        
+                        if state_is_negative(s_prime) == True:
+                            # you're out of business, give big negative reward
+                            r = -1000
+                        if p > PRACTICAL_PROB_THRESHOLD:
+                            print('s=',s,'a=',a,'x1=',x1,'y1 =',y1,
+                                  'x2=',x2,'y2 =', y2,'s_prime=',s_prime,'r = ', r)
             if p > PRACTICAL_PROB_THRESHOLD:
                 mdp_elements.append([s_prime, s, r, a,p])
     return mdp_elements
@@ -130,7 +142,7 @@ def build_mdp():
     for n1 in range(0,MAX_CARS_ON_LOCATION+1,1):
         for n2 in range(0,MAX_CARS_ON_LOCATION+1,1):
             state_space.append(np.array([n1,n2]))
-            
+    define_reasonable_xy_ranges()        
     mdp = []
     cnt=0
     possibilities = (2*MAX_TRANSFER+1)*pow(MAX_CARS_ON_LOCATION,2)     
@@ -139,16 +151,16 @@ def build_mdp():
             cnt +=1   
             if ((a < 0) and (abs(a) <= s[1])) or ((a >= 0) and (abs(a) <= s[0])):
             
-                expected_s_prime = truncate_s(s_prime(s,np.array([LAMBDA_X1,LAMBDA_X2]),
-                                           np.array([LAMBDA_Y1,LAMBDA_Y2]),a))
+                expected_s_prime = s_prime(s,np.array([LAMBDA_X1,LAMBDA_X2]),
+                                           np.array([LAMBDA_Y1,LAMBDA_Y2]),a)
                 print('considering action ', a, 'to take ', s,'->', expected_s_prime,' mdp scan ',100.0*cnt/possibilities,' percent complete')
                 s_prime_candidates = []
                 for i in range(-MAX_SCAN_S_PRIME,MAX_SCAN_S_PRIME+1,1):
                     for j in range(-MAX_SCAN_S_PRIME,MAX_SCAN_S_PRIME+1,1):
-                        candidate = truncate_s(expected_s_prime + np.array([i,j]))
+                        candidate = expected_s_prime + np.array([i,j])
                         if np_array_in_list(s_prime_candidates,candidate) == False:
                             s_prime_candidates.append(candidate)       
-                print(s_prime_candidates)
+                #print(s_prime_candidates)
                 
                 
                 for s_prime_c in s_prime_candidates:
@@ -157,6 +169,7 @@ def build_mdp():
                     if len(elements) > 0:
                         mdp.append(elements)   
                         print("mdp grown with " + str(elements))
+                        print("\n")
                         # on every update store the mdp as currently known
                         with open('mdp.data', 'wb') as filehandle: 
                             pickle.dump(mdp, filehandle)
@@ -169,24 +182,21 @@ def build_mdp():
 
 def main(argv):
     
-    # manual checks: should be true
-    print(transition_possible(np.array([10,8]),
-                               np.array([12,7]),
-                               np.array([3,0]),
-                               np.array([0,2]),1))
+    parser = argparse.ArgumentParser(description='MDP based policy iteration on Sutton and Barto Jacks car rental example problem')
     
-    # manual check: should yield non empty list when PRACTICAL_PROB_THRESHOLD <= 0.001
-    print(mdp_prob(np.array([12,7]), np.array([10,8]),1))
+    parser.add_argument('-p','--mdp_path', help='path to precalculated mdp', required=False)
+    args = vars(parser.parse_args())
     
-    define_reasonable_xy_ranges()
-    print(y1_range)
-    print(y2_range)
+    path = args['mdp_path']   
     
-    # on with the real job
-    mdp = build_mdp()
     
-    #if you already have the mdp precalculated, load it from file
-    mdp = pickle.load(open('mdp.data', 'rb'))
+    if path is None:
+        mdp = build_mdp()
+    else:    
+        #if you already have the mdp precalculated, load it from file
+        mdp = pickle.load(open(path, 'rb'))
+        
+    print(mdp)
     
     
     
