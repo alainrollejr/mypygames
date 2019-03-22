@@ -26,12 +26,12 @@ MAX_CARS_ON_LOCATION = 10
 MAX_TRANSFER = 2
 REWARD_FOR_RENTAL = 10
 REWARD_FOR_TRANSFER = -2
-MAX_SCAN_S_PRIME = 3
-PRACTICAL_PROB_THRESHOLD = 0.01 # we won't care about events that have less probability than this
-LAMBDA_X1 = 3/2.0
-LAMBDA_X2 = 2/2.0
-LAMBDA_Y1 = 3/2.0
-LAMBDA_Y2 = 4/2.0
+MAX_SCAN_S_PRIME = 4
+PRACTICAL_PROB_THRESHOLD = 0.005 # we won't care about events that have less probability than this
+LAMBDA_X1 = 2
+LAMBDA_X2 = 1
+LAMBDA_Y1 = 1
+LAMBDA_Y2 = 2
 
 # ([s_prime, s, r, a,p])
 S_PRIME_IND = 0
@@ -130,8 +130,8 @@ def p_y2(k):
 """
 def s_prime(s,x,y,a):
     s_prime = [0,0]
-    s_prime[0] = min(s[0] + x[0] - y[0] - a,MAX_CARS_ON_LOCATION)
-    s_prime[1] = min(s[1] + x[1] - y[1] + a,MAX_CARS_ON_LOCATION)
+    s_prime[0] = s[0] + x[0] - y[0] - a
+    s_prime[1] = s[1] + x[1] - y[1] + a
     return s_prime
 
 def truncate_s(s):
@@ -171,7 +171,7 @@ def mdp_prob(s_prime, s, a):
                             print('s=',s,'a=',a,'x1=',x1,'y1 =',y1,
                                   'x2=',x2,'y2 =', y2,'s_prime=',s_prime,'r = ', r)
             if p > PRACTICAL_PROB_THRESHOLD:
-                mdp_elements.append([s_prime, s, r, a,p])
+                mdp_elements.append([truncate_s(s_prime), s, r, a,p])
     return mdp_elements
 
 def define_reasonable_xy_ranges():
@@ -207,34 +207,33 @@ def build_mdp():
     possibilities = (2*MAX_TRANSFER+1)*pow(MAX_CARS_ON_LOCATION,2)     
     for s in state_space:
         for a in range(-MAX_TRANSFER,MAX_TRANSFER+1,1):
-            cnt +=1   
-            if ((a < 0) and (abs(a) <= s[1])) or ((a >= 0) and (abs(a) <= s[0])):
+            cnt +=1
             
-                expected_s_prime = s_prime(s,[LAMBDA_X1,LAMBDA_X2],
-                                           [LAMBDA_Y1,LAMBDA_Y2],a)
-                print('considering action ', a, 'to take ', s,'->', expected_s_prime,' mdp scan ',100.0*cnt/possibilities,' percent complete')
-                s_prime_candidates = []
-                for i in range(-MAX_SCAN_S_PRIME,MAX_SCAN_S_PRIME+1,1):
-                    for j in range(-MAX_SCAN_S_PRIME,MAX_SCAN_S_PRIME+1,1):
-                        candidate = [0,0]
-                        candidate[0] = expected_s_prime[0] + i
-                        candidate[1] = expected_s_prime[1] + j
-                        if np_array_in_list(s_prime_candidates,candidate) == False:
-                            s_prime_candidates.append(candidate)       
-                print(s_prime_candidates)
-                
-                
-                for s_prime_c in s_prime_candidates:
-                                
-                    elements = mdp_prob(s_prime_c, s, a)
-                    if len(elements) > 0:
-                        for element in elements:
-                            mdp.append(element)   
-                            print("mdp grown with " + str(elements))
-                            print("\n")
-                            # on every update store the mdp as currently known
-                            with open('mdp.data', 'wb') as filehandle: 
-                                pickle.dump(mdp, filehandle)
+            expected_s_prime = s_prime(s,[LAMBDA_X1,LAMBDA_X2],
+                                       [LAMBDA_Y1,LAMBDA_Y2],a)
+            print('considering action ', a, 'to take ', s,'->', expected_s_prime,' mdp scan ',100.0*cnt/possibilities,' percent complete')
+            s_prime_candidates = []
+            for i in range(-MAX_SCAN_S_PRIME,MAX_SCAN_S_PRIME+1,1):
+                for j in range(-MAX_SCAN_S_PRIME,MAX_SCAN_S_PRIME+1,1):
+                    candidate = [0,0]
+                    candidate[0] = expected_s_prime[0] + i
+                    candidate[1] = expected_s_prime[1] + j
+                    if np_array_in_list(s_prime_candidates,candidate) == False:
+                        s_prime_candidates.append(candidate)       
+            print(s_prime_candidates)
+            
+            
+            for s_prime_c in s_prime_candidates:
+                            
+                elements = mdp_prob(s_prime_c, s, a)
+                if len(elements) > 0:
+                    for element in elements:
+                        mdp.append(element)   
+                        print("mdp grown with " + str(elements))
+                        print("\n")
+                        # on every update store the mdp as currently known
+                        with open('mdp.data', 'wb') as filehandle: 
+                            pickle.dump(mdp, filehandle)
     return mdp
                       
 def build_state_space():    
@@ -325,7 +324,7 @@ def policy_iteration(mdp):
     init_pi()
     init_valuefunction()
     
-    max_iter = 5
+    max_iter = 10
     iter = 0
     policy_stable = False
     while (policy_stable == False) and (iter < max_iter):
