@@ -58,45 +58,38 @@ def visualise_value_function():
     X = np.empty([MAX_CARS_ON_LOCATION+1,1])
     Y = np.empty([MAX_CARS_ON_LOCATION+1,1])
     Z = np.empty([(MAX_CARS_ON_LOCATION+1),(MAX_CARS_ON_LOCATION+1)])
+    A = np.empty([(MAX_CARS_ON_LOCATION+1),(MAX_CARS_ON_LOCATION+1)])
     for n1 in range(0,MAX_CARS_ON_LOCATION+1,1):
         for n2 in range(0,MAX_CARS_ON_LOCATION+1,1):
             X[n1] = n1
             Y[n2] = n2
             Z[n1][n2] = V[ind]
+            A[n1][n2] = pi[ind]
             ind += 1
             
     X, Y = np.meshgrid(X, Y)
-    print(X)
+    #print(X)
     surf = ax.plot_surface(X, Y, Z, cmap=cm.coolwarm,
                        linewidth=0, antialiased=False)         
     # Add a color bar which maps values to colors.
     fig.colorbar(surf, shrink=0.5, aspect=5)
+    plt.title('value function')
     plt.show() 
     
     fig = plt.figure()
     plt.contourf(X, Y, Z, cmap=cm.coolwarm)
     plt.colorbar()
+    plt.title('value function')
     plt.show() 
     
-def policy_iteration(mdp):
-    build_state_space()
-    init_pi()
-    init_valuefunction()
+    fig = plt.figure()
+    plt.contourf(X, Y, A, cmap=cm.coolwarm)
+    plt.colorbar()
+    plt.title('actions (policy)')
+    plt.show() 
     
-    policy_evaluation(mdp)
-    visualise_value_function()   
-    
-    policy_improvement(mdp)
-    
-    policy_evaluation(mdp)
-    visualise_value_function()
-    
-    
-    
-    
-            
-            
-    
+
+
 
 # function to get unique values 
 def np_array_in_list(list,s):     
@@ -327,7 +320,20 @@ def policy_improvement(mdp):
             
     return policy_stable
             
-        
+def policy_iteration(mdp):
+    build_state_space()
+    init_pi()
+    init_valuefunction()
+    
+    max_iter = 5
+    iter = 0
+    policy_stable = False
+    while (policy_stable == False) and (iter < max_iter):
+        policy_evaluation(mdp)
+        visualise_value_function()    
+        policy_stable = policy_improvement(mdp)
+        iter += 1
+            
     
     
     
