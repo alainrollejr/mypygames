@@ -78,6 +78,22 @@ def visualise_value_function():
     plt.colorbar()
     plt.show() 
     
+def policy_iteration(mdp):
+    build_state_space()
+    init_pi()
+    init_valuefunction()
+    
+    policy_evaluation(mdp)
+    visualise_value_function()   
+    
+    policy_improvement(mdp)
+    
+    policy_evaluation(mdp)
+    visualise_value_function()
+    
+    
+    
+    
             
             
     
@@ -282,6 +298,36 @@ def policy_evaluation(mdp):
             break
         eval_iter += 1
         
+def policy_improvement(mdp):
+    policy_stable = True    
+    
+    for (index,s) in enumerate(S):
+        old_action = pi[index]
+        best_a = old_action
+        max_v = -1000
+        
+        # re-evaluate all possible actions a
+        for a in range(-MAX_TRANSFER,MAX_TRANSFER+1,1):
+            v = 0;
+            for m in mdp:
+                if (m[A_IND] == a) and (m[S_IND] == s):
+                    p = m[P_IND]
+                    r = m[R_IND]
+                    s_prime = m[S_PRIME_IND]
+                    s_prime_ind = index_for_s(s_prime)
+                    if s_prime_ind >= 0:
+                        v_prime = V[s_prime_ind]                    
+                        v += p*(r + GAMMA*v_prime)
+            if v > max_v:
+                max_v = v
+                best_a = a # argmax
+        pi[index] = best_a # update policy
+        if old_action != best_a:
+            policy_stable = False
+            
+    return policy_stable
+            
+        
     
     
     
@@ -302,14 +348,9 @@ def main(argv):
         #if you already have the mdp precalculated, load it from file
         mdp = pickle.load(open(path, 'rb'))
         
-    print(mdp)
     
-    build_state_space()
-    init_pi()
-    init_valuefunction()
     
-    policy_evaluation(mdp)
-    visualise_value_function()
+    policy_iteration(mdp)
     
     
     
