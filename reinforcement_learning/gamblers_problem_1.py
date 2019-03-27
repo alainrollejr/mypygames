@@ -23,7 +23,7 @@ import argparse
 import numpy as np
 
 GAMMA = 1.0 # discount factor
-POLICY_THETA = 0.5 # threshold on deviation of V from true V for policy
+POLICY_THETA = 0.05 # threshold on deviation of V from true V for policy
 MAX_CAPITAL=100
 P_HEADS = 0.4
 TERMINAL_STATE = -1
@@ -146,7 +146,7 @@ def policy_improvement(mdp):
     for (index,s) in enumerate(S):
         old_action = pi[index]
         best_a = old_action
-        max_v = -1000000
+        max_v = V[index]
         
         # re-evaluate all possible actions a
         for a in action_range(s):
@@ -174,7 +174,7 @@ def policy_iteration(mdp):
     init_pi()
     init_valuefunction()
     
-    max_iter = 40
+    max_iter = 10
     iter = 0
     policy_stable = False
     while (policy_stable == False) and (iter < max_iter):
