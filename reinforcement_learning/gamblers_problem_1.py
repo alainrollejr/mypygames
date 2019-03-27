@@ -168,6 +168,34 @@ def policy_improvement(mdp):
             policy_stable = False
             
     return policy_stable
+
+def show_policy_alternatives(mdp):        
+    plt.figure()
+    for (index,s) in enumerate(S):
+        old_action = pi[index]
+        best_a = old_action
+        best_v = V[index]
+        
+        print('state:',s,' alternatives for a=',best_a)
+        print('-----------------------------------------')
+        
+        # re-evaluate all possible actions a
+        for a in action_range(s):
+            v = 0;
+            for m in mdp:
+                if (m[A_IND] == a) and (m[S_IND] == s):
+                    p = m[P_IND]
+                    r = m[R_IND]
+                    s_prime = m[S_PRIME_IND]
+                    s_prime_ind = index_for_s(s_prime)
+                    if s_prime_ind >= 0:
+                        v_prime = V[s_prime_ind]                    
+                        v += p*(r + GAMMA*v_prime)
+            if v == best_v:
+                print('a ',a)
+                plt.scatter(s,a)
+        
+        
             
 def policy_iteration(mdp):
     
@@ -217,6 +245,7 @@ def main(argv):
     
     policy_iteration(mdp)
     visualise_value_function()
+    show_policy_alternatives(mdp)
     
     
     
