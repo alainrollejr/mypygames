@@ -176,8 +176,8 @@ def show_policy_alternatives(mdp):
         best_a = old_action
         best_v = V[index]
         
-        print('state:',s,' alternatives for a=',best_a)
-        print('-----------------------------------------')
+        #print('state:',s,' alternatives for a=',best_a)
+        #print('-----------------------------------------')
         
         # re-evaluate all possible actions a
         for a in action_range(s):
@@ -192,7 +192,7 @@ def show_policy_alternatives(mdp):
                         v_prime = V[s_prime_ind]                    
                         v += p*(r + GAMMA*v_prime)
             if v == best_v:
-                print('a ',a)
+                #print('a ',a)
                 plt.scatter(s,a)
         
         
@@ -221,29 +221,74 @@ def policy_iteration(mdp):
     pickle.dump(pi, filehandle)
     filehandle.close()
     
+def value_iteration(mdp):
+    init_pi()
+    init_valuefunction()
+    delta = 10
     
+    max_iter = 10
+    iter = 0
+    while (delta > 0.01) and (iter < max_iter):  
+        delta = 0
+        for (index,s) in enumerate(S):
+            max_v = V[index]
+            
+            # re-evaluate all possible actions a
+            for a in action_range(s):
+                v = 0;
+                for m in mdp:
+                    if (m[A_IND] == a) and (m[S_IND] == s):
+                        p = m[P_IND]
+                        r = m[R_IND]
+                        s_prime = m[S_PRIME_IND]
+                        s_prime_ind = index_for_s(s_prime)
+                        if s_prime_ind >= 0:
+                            v_prime = V[s_prime_ind]                    
+                            v += p*(r + GAMMA*v_prime)
+                if v > max_v:
+                    max_v = v
+ 
+            
+            delta = max(delta, abs(max_v-V[index]))
+            V[index] = max_v
+        iter += 1
+    policy_improvement(mdp)    
 
 def main(argv):
     
     parser = argparse.ArgumentParser(description='MDP based policy iteration on Sutton and Barto Gambler problem example')
     
     parser.add_argument('-p','--mdp_path', help='path to precalculated mdp', required=False)
+    parser.add_argument('-m','--method', help='v:  value iteration, p: policy iteration', required=False)
     args = vars(parser.parse_args())
     
-    path = args['mdp_path']   
+    path = args['mdp_path'] 
+    method = args['method']
     
     build_state_space()
     
+    if method is None:
+        value_iter = True
+    else:
+        if method=='v':
+            value_iter = True
+        elif method == 'p':
+            value_iter = False
+        else:
+            print('unsupported method ',method)
+            value_iter = True
+        
     if path is None:
         mdp = build_mdp()
     else:    
         #if you already have the mdp precalculated, load it from file
         mdp = pickle.load(open(path, 'rb'))
+
+    if value_iter == True:
+        value_iteration(mdp)
+    else:
+        policy_iteration(mdp)
         
-    #graph_mdp_elements([9,10], mdp)
-    
-    
-    policy_iteration(mdp)
     visualise_value_function()
     show_policy_alternatives(mdp)
     

@@ -69,8 +69,8 @@ def visualise_value_function():
         for n2 in range(0,MAX_CARS_ON_LOCATION+1,1):
             X[n1] = n1
             Y[n2] = n2
-            Z[n1][n2] = V[ind]
-            A[n1][n2] = pi[ind]
+            Z[n2][n1] = V[ind]
+            A[n2][n1] = pi[ind]
             print('n1',n1,'n2',n2,'a',pi[ind])
             ind += 1
             
@@ -209,41 +209,7 @@ def define_reasonable_xy_ranges():
     for x2 in range(MAX_CARS_ON_LOCATION):
         if p_x2(x2) > PRACTICAL_PROB_THRESHOLD:
             x2_range.append(x2)           
-    
-def graph_mdp_elements(s, mdp):
-    
-    start_node = str(s[0])+'_'+str(s[1])
-    
-    f = Digraph()
-    f.attr(rankdir='LR', size='8,5')
-    f.attr('node', shape='doublecircle')
-    f.node(start_node)    
-    f.attr('node', shape='circle')                       
-    
-    s_prime_list = []
-    for m in mdp:
-        if m[S_IND]==s:
-            s_prime = m[S_PRIME_IND]
-            end_node = str(m[S_PRIME_IND][0])+'_'+str(m[S_PRIME_IND][1])
-            
-            if len(s_prime_list) == 0:
-                s_prime_list.append(s_prime)
-                f.node(end_node)
-                f.edge(start_node, end_node, label='a ='+str(m[A_IND])+', r ='+str(m[R_IND]))
-            else:
-                exists = False
-                for s_prime_c in s_prime_list:
-                    if s_prime_c == s_prime:
-                        #f.edge(start_node, end_node, label='a ='+str(m[A_IND])+', r ='+str(m[R_IND]))
-                        exists = True
-                if exists == False:
-                    s_prime_list.append(s_prime)
-                    f.node(end_node)
-                    f.edge(start_node, end_node, label='a ='+str(m[A_IND])+', r ='+str(m[R_IND]))
-
-                        
-    f.render('graph.gv',view=True)
-    
+   
 
     
 def build_mdp(max_graph_index = 0):
@@ -372,7 +338,7 @@ def policy_improvement(mdp):
     return policy_stable
             
 def policy_iteration(mdp):
-    build_state_space()
+
     init_pi()
     init_valuefunction()
     
@@ -385,7 +351,7 @@ def policy_iteration(mdp):
         policy_stable = policy_improvement(mdp)
         iter += 1
         
-    visualise_value_function()
+    
     
     filehandle = open('value_jack1.data', 'wb') 
     pickle.dump(V, filehandle)   
@@ -395,17 +361,60 @@ def policy_iteration(mdp):
     pickle.dump(pi, filehandle)
     filehandle.close()
     
+def value_iteration(mdp):
+    init_pi()
+    init_valuefunction()
+    delta = 10
     
+    max_iter = 10
+    iter = 0
+    while (delta > POLICY_THETA) and (iter < max_iter):  
+        delta = 0
+        for (index,s) in enumerate(S):
+            max_v = V[index]
+            
+            # re-evaluate all possible actions a
+            for a in range(-MAX_TRANSFER,MAX_TRANSFER+1,1):
+                v = 0;
+                for m in mdp:
+                    if (m[A_IND] == a) and (m[S_IND] == s):
+                        p = m[P_IND]
+                        r = m[R_IND]
+                        s_prime = m[S_PRIME_IND]
+                        s_prime_ind = index_for_s(s_prime)
+                        if s_prime_ind >= 0:
+                            v_prime = V[s_prime_ind]                    
+                            v += p*(r + GAMMA*v_prime)
+                if v > max_v:
+                    max_v = v
+ 
+            
+            delta = max(delta, abs(max_v-V[index]))
+            V[index] = max_v
+        iter += 1
+    policy_improvement(mdp)    
 
 def main(argv):
     
     parser = argparse.ArgumentParser(description='MDP based policy iteration on Sutton and Barto Jacks car rental example problem')
     
     parser.add_argument('-p','--mdp_path', help='path to precalculated mdp', required=False)
+    parser.add_argument('-m','--method', help='v:  value iteration, p: policy iteration', required=False)
     args = vars(parser.parse_args())
     
     path = args['mdp_path']   
+    method = args['method']
     
+    if method is None:
+        value_iter = True
+    else:
+        if method=='v':
+            value_iter = True
+        elif method == 'p':
+            value_iter = False
+        else:
+            print('unsupported method ',method)
+            value_iter = True
     
     if path is None:
         mdp = build_mdp()
@@ -413,10 +422,13 @@ def main(argv):
         #if you already have the mdp precalculated, load it from file
         mdp = pickle.load(open(path, 'rb'))
         
-    #graph_mdp_elements([0,0], mdp)
+    build_state_space()
+    if value_iter == True:
+        value_iteration(mdp)
+    else:
+        policy_iteration(mdp)
     
-    
-    policy_iteration(mdp)
+    visualise_value_function()
     
     
     
