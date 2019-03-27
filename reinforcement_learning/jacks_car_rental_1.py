@@ -25,16 +25,16 @@ from scipy.special import factorial
 
 GAMMA = 0.9 # discount factor
 POLICY_THETA = 0.5 # threshold on deviation of V from true V for policy
-MAX_CARS_ON_LOCATION = 20
-MAX_TRANSFER = 5
+MAX_CARS_ON_LOCATION = 10
+MAX_TRANSFER = 2
 REWARD_FOR_RENTAL = 10
 REWARD_FOR_TRANSFER = -2
-MAX_SCAN_S_PRIME = 4
+
 PRACTICAL_PROB_THRESHOLD = 0.1 # we won't care about events that have less probability than this
-LAMBDA_X1 = 3
-LAMBDA_X2 = 2
-LAMBDA_Y1 = 3
-LAMBDA_Y2 = 4
+LAMBDA_X1 = 2
+LAMBDA_X2 = 1
+LAMBDA_Y1 = 2
+LAMBDA_Y2 = 2
 TERMINAL_STATE = [-1,-1]
 
 # ([s_prime, s, r, a,p])
@@ -144,79 +144,51 @@ def p_y2(k):
 """
     2 most important transition equations
 """
-def s_prime(s,x,y,a):
-    s_prime = [0,0]   
-    
-    s_prime[0] = s[0] + x[0] - y[0] - a
-    s_prime[1] = s[1] + x[1] - y[1] + a
-    return s_prime
-
-def truncate_s(s):
-    s[0] = min(s[0], MAX_CARS_ON_LOCATION)
-    s[1] = min(s[1], MAX_CARS_ON_LOCATION)
-    s[0] = max(s[0], 0)
-    s[1] = max(s[1], 0)
-    return s
-    
+ 
 
 def reward(y,a):
     return (y[0]+y[1])*REWARD_FOR_RENTAL + abs(a)*REWARD_FOR_TRANSFER    
 
-def transition_possible(s,s_prime_candidate,x,y,a):  
-    # todo: treat special termination state as well ?
-    s_prime_calculated = s_prime(s,x,y,a)
-    if s_prime_candidate != s_prime_calculated:
-        return False  
-    return True
 
-# calculate p(s',r | s, a)
-def mdp_prob(s_prime, s, a):
-    
-    raw_mdp_elements = []
-    mdp_elements = []
-    
-    for y1 in y1_range:        
-        for y2 in y2_range:
-            for x1 in x1_range:
-                for x2 in x2_range: 
-                    x = [x1,x2]
-                    y = [y1,y2] 
-                    
-                    if transition_possible(s,s_prime,x,y,a) == True:
-                        p = p_x1(x1)*p_x2(x2)*p_y1(y1)*p_y2(y2)                      
-                        
-            
-                        if (s[0]-y1 < 0) or (s[1]-y2 < 0):
-                            # we go bust already before migrating to s_prime
-                            # go to the perpetual terminating state                    
-                            new_element = [TERMINAL_STATE, s, 0, a,p]
-                        elif state_is_negative(s_prime) == True:
-                            # we start the next morning and go bust
-                            new_element = [TERMINAL_STATE, s, 0, a,p]
-                        else:                                
-                            r = reward([y1,y2],a)
-                            new_element = [truncate_s(s_prime), s, r, a,p]
-                        
-                        if len(raw_mdp_elements) == 0:
-                            raw_mdp_elements.append([new_element[0],new_element[1],new_element[2],new_element[3],new_element[4]])
-                        else:
-                            exists = False
-                            for el in raw_mdp_elements:
-                                if el[0:P_IND] == new_element[0:P_IND]:
-                                    # element exists
-                                    el[P_IND] = el[P_IND] + new_element[P_IND]
-                                    exists = True
-                            if exists == False:
-                                raw_mdp_elements.append([new_element[0],new_element[1],new_element[2],new_element[3],new_element[4]])
-                                
-    # now prune to somewhat likely transitions for computational efficiency                     
-    for el in raw_mdp_elements:
-        if el[P_IND] >= pow(PRACTICAL_PROB_THRESHOLD,3):
-            mdp_elements.append([el[0],el[1],el[2],el[3],el[4]])
-    #print(mdp_elements)    
-    #print('----')
 
-    return mdp_elements
+def p_sarsa(s,x,y,a):
+    # if your are in terminal state you stay in terminal state
+    if s == TERMINAL_STATE:
+        s_prime = TERMINAL_STATE
+        p = 1.0
+        r = 0
+        return [s_prime,s,r,a,p,x,y]
+    p = p_x1(x[0])*p_x2(x[1])*p_y1(y[0])*p_y2(y[1])
+    
+    # if more cars are requested for rent than available at start of day
+    # you are bust and go to terminal state
+    if (s[0]-y[0] < 0): 
+        r = 0        
+        s_prime = TERMINAL_STATE
+        return [s_prime,s,r,a,p,x,y]
+    
+    if (s[1]-y[1] < 0): 
+        r = 0        
+        s_prime = TERMINAL_STATE
+        return [s_prime,s,r,a,p,x,y]
+    
+    # approaching the end of the day, the amount of available cars at a location
+    # equals  s + x -y 
+    # therefore you can never transfer more than this amount of cars to the other locations
+    if a >  (s[0] +x[0] - y[0]):
+        return []
+    
+    if -a > (s[1] +x[1] - y[1]):
+        return []
+        
+    # no special corner cases -> default return values
+    s_prime = [0,0]    
+    s_prime[0] = min(s[0] + x[0] - y[0] - a,20)    
+    s_prime[1] = min(s[1] + x[1] - y[1] + a,20)    
+    r = reward(y,a)    
+    return [s_prime,s,r,a,p,x,y]
+
+
 
 def define_reasonable_xy_ranges():
     
@@ -272,21 +244,7 @@ def graph_mdp_elements(s, mdp):
                         
     f.render('graph.gv',view=True)
     
-def build_s_prime_candidates(s,a):
-    expected_s_prime = [0,0]
-    expected_s_prime[0] = s[0] + LAMBDA_X1 - LAMBDA_Y1 - a
-    expected_s_prime[1] = s[1] + LAMBDA_X2 - LAMBDA_Y2 + a
-    
-    
-    s_prime_candidates = []
-    for i in range(-MAX_SCAN_S_PRIME,MAX_SCAN_S_PRIME+1,1):
-        for j in range(-MAX_SCAN_S_PRIME,MAX_SCAN_S_PRIME+1,1):
-            candidate = [0,0]
-            candidate[0] = expected_s_prime[0] + i
-            candidate[1] = expected_s_prime[1] + j
-            if np_array_in_list(s_prime_candidates,candidate) == False:
-                s_prime_candidates.append(candidate)       
-    return s_prime_candidates
+
     
 def build_mdp(max_graph_index = 0):
     
@@ -305,19 +263,21 @@ def build_mdp(max_graph_index = 0):
             cnt +=1  
             print('mdp scan ',100.0*cnt/possibilities,' percent complete, len(mdp): ',mdp_len)
             
-            s_prime_candidates = build_s_prime_candidates(s,a)         
-            
-            for s_prime_c in s_prime_candidates:                            
-                elements = mdp_prob(s_prime_c, s, a)
-                
-                mdp_len += len(elements)
-                for element in elements:
-                    mdp.append(element)  
-                    
-                    
-                    #print("mdp grown with " + str(elements))
-                    #print("\n")
-                    
+            for y1 in y1_range:        
+                for y2 in y2_range:
+                    for x1 in x1_range:
+                        for x2 in x2_range: 
+                            x = [x1,x2]
+                            y = [y1,y2] 
+                            
+                            el = p_sarsa(s,x,y,a)
+                            
+                            #print(el)
+                            
+                            if len(el) > 0:
+                                mdp.append(el)
+                                mdp_len +=1
+                        
     filehandle = open('mdp.data', 'wb') 
     pickle.dump(mdp, filehandle)  
     filehandle.close()             
@@ -453,7 +413,7 @@ def main(argv):
         #if you already have the mdp precalculated, load it from file
         mdp = pickle.load(open(path, 'rb'))
         
-    #graph_mdp_elements([9,10], mdp)
+    #graph_mdp_elements([0,0], mdp)
     
     
     policy_iteration(mdp)
