@@ -30,7 +30,7 @@ MAX_TRANSFER = 2
 REWARD_FOR_RENTAL = 10
 REWARD_FOR_TRANSFER = -2
 
-PRACTICAL_PROB_THRESHOLD = 0.1 # we won't care about events that have less probability than this
+PRACTICAL_PROB_THRESHOLD = 0.05 # we won't care about events that have less probability than this
 LAMBDA_X1 = 2
 LAMBDA_X2 = 1
 LAMBDA_Y1 = 2
@@ -218,14 +218,16 @@ def build_mdp(max_graph_index = 0):
     for n1 in range(0,MAX_CARS_ON_LOCATION+1,1):
         for n2 in range(0,MAX_CARS_ON_LOCATION+1,1):
             state_space.append([n1,n2])
-    define_reasonable_xy_ranges()        
+    define_reasonable_xy_ranges()    
+
+        
     mdp = []
     mdp_len = 0
     cnt=0
     possibilities = (2*MAX_TRANSFER+1)*pow(MAX_CARS_ON_LOCATION,2)     
     for s in state_space:
         for a in range(-MAX_TRANSFER,MAX_TRANSFER+1,1):    
-                
+            sa_list=[]   
             cnt +=1  
             print('mdp scan ',100.0*cnt/possibilities,' percent complete, len(mdp): ',mdp_len)
             
@@ -241,8 +243,23 @@ def build_mdp(max_graph_index = 0):
                             #print(el)
                             
                             if len(el) > 0:
-                                mdp.append(el)
-                                mdp_len +=1
+                                # aggregate equal (s',a,r,s) combinations to
+                                # keep MDP representation small
+                                if len(sa_list) == 0:
+                                    sa_list.append(el)
+                                else:
+                                    exists = False
+                                    for (ind,sa_el) in enumerate(sa_list):
+                                        if sa_el[0:P_IND]==el[0:P_IND]:
+                                            sa_list[ind][P_IND] += el[P_IND]
+                                            exists = True
+                                    if exists == False:
+                                        sa_list.append(el)
+                                            
+                                        
+            for sa_el in sa_list:                    
+                mdp.append(sa_el)
+                mdp_len +=1
                         
     filehandle = open('mdp.data', 'wb') 
     pickle.dump(mdp, filehandle)  
