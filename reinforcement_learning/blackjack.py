@@ -49,12 +49,30 @@ def has_ace(cards):
 def has_usable_ace(cards):
     if has_ace(cards) == True:
         sum = 0
-        for c in player_cards:
+        for c in cards:
             if c != 'A':
                 sum += c
         if sum <= 10:
             return True
     return False
+
+def card_sum(cards):
+    c_sum = 0
+    if has_usable_ace(cards) == True:
+        for c in cards:
+            if c != 'A':
+                c_sum += int(c)
+            else:
+                c_sum += 11
+    else:
+        for c in cards:
+            if c != 'A':
+                c_sum += int(c)
+            else:
+                c_sum += 1
+    return c_sum
+        
+        
     
     
 
@@ -63,7 +81,7 @@ def main(argv):
     parser = argparse.ArgumentParser(description='MC e-greedy policy iteration on Sutton and Barto Blackjack problem example')
     
     
-    parser.add_argument('-m','--method', help='e:  epson greedy, s: start', required=False)
+    parser.add_argument('-m','--method', help='e:  epson greedy on policy, s: exploring starts', required=False)
     parser.add_argument('-e','--episodes', help='-e <nr of episodes>', required=False)
     args = vars(parser.parse_args())
     
@@ -96,7 +114,9 @@ def main(argv):
     
 
         print('dealer cards',dealer_cards)
+        print('dealer sum', card_sum(dealer_cards))
         print('player cards',player_cards)
+        print('player sum', card_sum(player_cards))
         print('player has usable ace', has_usable_ace(player_cards))         
     
     
