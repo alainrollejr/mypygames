@@ -30,16 +30,20 @@ REWARD_DRAW=0.0
 REWARD_BUST=-1.0
 HIT = 1
 STICK = 0
+ALPHA = 0.1 # for moving average approach to Q value for (s,a) iso true average
 
 S = [] # state space
 pi = [] # policy
 Q = [] # action value function
+Q_initiated = []
 Q_dict = {} # dictionary that maps state to Q table index
+pi_dict = {}
 
 # episode variables
 
 def init_Q():
-    ind = 0
+    pi_ind = 0
+    Q_ind = 0
     player_has_usable_ace = True
     
     for player_sum in range(12,22):
@@ -48,10 +52,21 @@ def init_Q():
                 dealer_shows_card ='A'
             else:
                 dealer_shows_card = str(dealer_shows)
-                
-            Q.append(HIT)
-            Q_dict[(player_has_usable_ace,dealer_shows_card,player_sum)] = ind
-            ind += 1
+               
+            pi.append(HIT)
+            pi_dict[(player_has_usable_ace,dealer_shows_card,player_sum)] = pi_ind
+            pi_ind += 1
+            
+            Q.append(0.0);
+            Q_initiated.append(False)
+            Q_dict[(player_has_usable_ace,dealer_shows_card,player_sum,STICK)] = Q_ind
+            Q_ind += 1
+            
+            Q.append(0.0);
+            Q_initiated.append(False)
+            Q_dict[(player_has_usable_ace,dealer_shows_card,player_sum,HIT)] = Q_ind
+            Q_ind += 1
+            
     player_has_usable_ace = False
     for player_sum in range(12,22):
         for dealer_shows in range(11): # dealer shows ace has value 0
@@ -60,9 +75,20 @@ def init_Q():
             else:
                 dealer_shows_card = str(dealer_shows)
                 
-            Q.append(HIT)
-            Q_dict[(player_has_usable_ace,dealer_shows_card,player_sum)] = ind
-            ind += 1
+              
+            pi.append(HIT)
+            pi_dict[(player_has_usable_ace,dealer_shows_card,player_sum)] = pi_ind
+            pi_ind += 1
+            
+            Q.append(0.0);
+            Q_initiated.append(False)
+            Q_dict[(player_has_usable_ace,dealer_shows_card,player_sum,STICK)] = Q_ind
+            Q_ind += 1
+            
+            Q.append(0.0);
+            Q_initiated.append(False)
+            Q_dict[(player_has_usable_ace,dealer_shows_card,player_sum,HIT)] = Q_ind
+            Q_ind += 1
     
 
 def init_episode(dealer_cards, player_cards):  
@@ -133,43 +159,69 @@ def player_action(player_cards, dealer_cards):
     if c == 21:
         return STICK
     
-    index = Q_dict[state(player_cards, dealer_cards)]
-    return Q[index]
+    index = pi_dict[state(player_cards, dealer_cards)]
+    return pi[index]
   
 
         
 def play_episode(player_cards, dealer_cards):
+    visited_sa_list = []
     while True:
         s = state(player_cards, dealer_cards)
         print('player_cards',player_cards)
         print('dealer_cards',dealer_cards)
         print(s)
-        # todo: keep track of (first) visits to state
         
         # state evaluation
         if card_sum(player_cards) > 21:
-            return REWARD_BUST
+            r= REWARD_BUST
+            break
         
         if card_sum(dealer_cards) > 21:
-            return REWARD_WIN        
+            r=REWARD_WIN
+            break
         
         if card_sum(player_cards) == 21:
             if card_sum(dealer_cards) == 21:
-                return REWARD_DRAW
+                r= REWARD_DRAW
             else:
-                return REWARD_WIN
+                r=REWARD_WIN
+            break
             
         if card_sum(dealer_cards) == 21:
-            return REWARD_BUST
+            r = REWARD_BUST
+            break
         
-        # player action
+        # player action       
         pa = player_action(player_cards, dealer_cards)
+        
+        # only remember the  interesting, non obvious actions
+        if card_sum(player_cards) >= 12:       
+            visited_sa_list.append((s[0],s[1],s[2],pa))
+            
+            
         if pa == HIT:
             player_cards.append(random.choice(POSSIBLE_CARDS))
+            
+        #todo append (s,pa) combination to Q list or dict ?
         
         # dealer action (fixed policy)
         if card_sum(dealer_cards) < 17:
             dealer_cards.append(random.choice(POSSIBLE_CARDS))
+    
+    for sa in visited_sa_list:
+        # todo do sth with the reward
+        print (sa,r)
+        index = Q_dict[sa]
+        if Q_initiated[index] == False:
+            # first update
+            Q_initiated[index] = True
+            Q[index] = r
+        else:
+            Q[index] = Q[index] + ALPHA*(r - Q[index])
+            
+        
+        
             
         
             
