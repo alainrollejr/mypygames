@@ -25,12 +25,45 @@ import random
 
 POSSIBLE_CARDS = ('A',1,2,3,4,5,6,7,8,9,10) # all face cards have value 10
 GAMMA = 1.0 # discount factor
+REWARD_WIN=+1.0
+REWARD_DRAW=0.0
+REWARD_BUST=-1.0
+HIT = 1
+STICK = 0
+
 S = [] # state space
 pi = [] # policy
 Q = [] # action value function
+Q_dict = {} # dictionary that maps state to Q table index
 
 # episode variables
 
+def init_Q():
+    ind = 0
+    player_has_usable_ace = True
+    
+    for player_sum in range(12,22):
+        for dealer_shows in range(11): # dealer shows ace has value 0
+            if dealer_shows==0:
+                dealer_shows_card ='A'
+            else:
+                dealer_shows_card = str(dealer_shows)
+                
+            Q.append(STICK)
+            Q_dict[(player_has_usable_ace,dealer_shows_card,player_sum)] = ind
+            ind += 1
+    player_has_usable_ace = False
+    for player_sum in range(12,22):
+        for dealer_shows in range(11): # dealer shows ace has value 0
+            if dealer_shows==0:
+                dealer_shows_card ='A'
+            else:
+                dealer_shows_card = str(dealer_shows)
+                
+            Q.append(STICK)
+            Q_dict[(player_has_usable_ace,dealer_shows_card,player_sum)] = ind
+            ind += 1
+    
 
 def init_episode(dealer_cards, player_cards):  
     
@@ -71,8 +104,23 @@ def card_sum(cards):
             else:
                 c_sum += 1
     return c_sum
+
+def player_action(player_cards, dealer_cards):
+    c = card_sum(player_cards)
+    if c < 12:
+        return HIT
+    
+    index = Q_dict[(has_usable_ace(player_cards),str(dealer_cards[0]),c)]
+    return Q[index]
+    
         
-        
+def play_episode(player_cards, dealer_cards):
+    if card_sum(player_cards) > 21:
+        return REWARD_BUST
+    
+    if card_sum(dealer_cards) > 21:
+        return REWARD_WIN
+    
     
     
 
@@ -107,6 +155,8 @@ def main(argv):
             print('unsupported method, reverting to default method ',method)
             epson_greedy = True
     
+    init_Q()
+    print(Q_dict)
     for k in range(nr_episodes):
         dealer_cards = []
         player_cards = []       
