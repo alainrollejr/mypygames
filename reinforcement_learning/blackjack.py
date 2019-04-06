@@ -49,7 +49,7 @@ def init_Q():
             else:
                 dealer_shows_card = str(dealer_shows)
                 
-            Q.append(STICK)
+            Q.append(HIT)
             Q_dict[(player_has_usable_ace,dealer_shows_card,player_sum)] = ind
             ind += 1
     player_has_usable_ace = False
@@ -60,7 +60,7 @@ def init_Q():
             else:
                 dealer_shows_card = str(dealer_shows)
                 
-            Q.append(STICK)
+            Q.append(HIT)
             Q_dict[(player_has_usable_ace,dealer_shows_card,player_sum)] = ind
             ind += 1
     
@@ -105,22 +105,61 @@ def card_sum(cards):
                 c_sum += 1
     return c_sum
 
+def state(player_cards, dealer_cards):
+    return (has_usable_ace(player_cards),str(dealer_cards[0]),card_sum(player_cards))
+
 def player_action(player_cards, dealer_cards):
     c = card_sum(player_cards)
     if c < 12:
         return HIT
+    if c == 21:
+        return STICK
     
-    index = Q_dict[(has_usable_ace(player_cards),str(dealer_cards[0]),c)]
+    index = Q_dict[state(player_cards, dealer_cards)]
     return Q[index]
-    
+  
+
         
 def play_episode(player_cards, dealer_cards):
-    if card_sum(player_cards) > 21:
-        return REWARD_BUST
-    
-    if card_sum(dealer_cards) > 21:
-        return REWARD_WIN
-    
+    while True:
+        s = state(player_cards, dealer_cards)
+        print('player_cards',player_cards)
+        print('dealer_cards',dealer_cards)
+        print(s)
+        
+        # state evaluation
+        if card_sum(player_cards) > 21:
+            return REWARD_BUST
+        
+        if card_sum(dealer_cards) > 21:
+            return REWARD_WIN        
+        
+        if card_sum(player_cards) == 21:
+            if card_sum(dealer_cards) == 21:
+                return REWARD_DRAW
+            else:
+                return REWARD_WIN
+            
+        if card_sum(dealer_cards) == 21:
+            return REWARD_BUST
+        
+        # player action
+        pa = player_action(player_cards, dealer_cards)
+        if pa == HIT:
+            player_cards.append(random.choice(POSSIBLE_CARDS))
+        
+        # dealer action (fixed policy)
+        if card_sum(dealer_cards) < 17:
+            dealer_cards.append(random.choice(POSSIBLE_CARDS))
+            
+        
+            
+        
+        
+        
+        
+        
+        
     
     
 
@@ -156,18 +195,16 @@ def main(argv):
             epson_greedy = True
     
     init_Q()
-    print(Q_dict)
+    #print(Q_dict)
     for k in range(nr_episodes):
         dealer_cards = []
         player_cards = []       
         init_episode(dealer_cards, player_cards)
+        
+        r = play_episode(dealer_cards, player_cards)
+        print('reward',r)
     
-
-        print('dealer cards',dealer_cards)
-        print('dealer sum', card_sum(dealer_cards))
-        print('player cards',player_cards)
-        print('player sum', card_sum(player_cards))
-        print('player has usable ace', has_usable_ace(player_cards))         
+        
     
     
 if __name__ == "__main__":
