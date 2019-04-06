@@ -80,23 +80,41 @@ def has_ace(cards):
     return False
 
 def has_usable_ace(cards):
-    if has_ace(cards) == True:
-        sum = 0
-        for c in cards:
-            if c != 'A':
-                sum += c
-        if sum <= 10:
+    ace_used = False
+    ace_found = False
+    sum = 0
+    for c in cards:
+        if c == 'A':
+            ace_found = True
+            if ace_used == False:
+                ace_used = True
+                sum += 11
+            else:
+                sum +=1
+        else:
+            sum += c
+            
+    if ace_found == True:
+        if sum > 21:
+            return False
+        else:
             return True
-    return False
+    else:
+        return False
 
 def card_sum(cards):
     c_sum = 0
+    ace_used = False
     if has_usable_ace(cards) == True:
         for c in cards:
             if c != 'A':
                 c_sum += int(c)
             else:
-                c_sum += 11
+                if ace_used == False:
+                    c_sum += 11
+                    ace_used = True
+                else:
+                    c_sum +=1 # watch out for more than 1 ace
     else:
         for c in cards:
             if c != 'A':
@@ -126,6 +144,7 @@ def play_episode(player_cards, dealer_cards):
         print('player_cards',player_cards)
         print('dealer_cards',dealer_cards)
         print(s)
+        # todo: keep track of (first) visits to state
         
         # state evaluation
         if card_sum(player_cards) > 21:
@@ -203,6 +222,8 @@ def main(argv):
         
         r = play_episode(dealer_cards, player_cards)
         print('reward',r)
+        
+        # TODO: distribute rewards for all states visited during the episode
     
         
     
