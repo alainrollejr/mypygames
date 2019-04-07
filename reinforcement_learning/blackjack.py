@@ -36,6 +36,7 @@ S = [] # state space
 pi = [] # policy
 Q = [] # action value function
 Q_initiated = []
+state_space = []
 Q_dict = {} # dictionary that maps state to Q table index
 pi_dict = {}
 
@@ -54,6 +55,7 @@ def init_Q():
                 dealer_shows_card = str(dealer_shows)
                
             pi.append(HIT)
+            state_space.append((player_has_usable_ace,str(dealer_shows_card),player_sum))
             pi_dict[(player_has_usable_ace,dealer_shows_card,player_sum)] = pi_ind
             pi_ind += 1
             
@@ -77,6 +79,7 @@ def init_Q():
                 
               
             pi.append(HIT)
+            state_space.append((player_has_usable_ace,str(dealer_shows_card),player_sum))
             pi_dict[(player_has_usable_ace,dealer_shows_card,player_sum)] = pi_ind
             pi_ind += 1
             
@@ -89,7 +92,24 @@ def init_Q():
             Q_initiated.append(False)
             Q_dict[(player_has_usable_ace,dealer_shows_card,player_sum,HIT)] = Q_ind
             Q_ind += 1
-    
+  
+def update_pi():
+    # adapt policy to new insights in Q (fully greedy)
+    for s in state_space:
+        pi_ind = pi_dict[s]
+        s_hit = (s[0],s[1],s[2],HIT)
+        s_stick = (s[0],s[1],s[2],STICK)
+        Q_ind_hit = Q_dict[s_hit]
+        Q_ind_stick = Q_dict[s_stick]
+        Q_hit = Q[Q_ind_hit]
+        Q_stick = Q[Q_ind_stick]
+        
+        if Q_hit > Q_stick:
+            pi[pi_ind] = HIT
+        else:
+            pi[pi_ind] = STICK
+        
+        
 
 def init_episode(dealer_cards, player_cards):  
     
@@ -152,19 +172,27 @@ def card_sum(cards):
 def state(player_cards, dealer_cards):
     return (has_usable_ace(player_cards),str(dealer_cards[0]),card_sum(player_cards))
 
-def player_action(player_cards, dealer_cards):
+def player_action(player_cards, dealer_cards, epson):
     c = card_sum(player_cards)
     if c < 12:
         return HIT
     if c == 21:
         return STICK
-    
+       
     index = pi_dict[state(player_cards, dealer_cards)]
-    return pi[index]
-  
+    greedy_action = pi[index]
+    
+    v = random.uniform(0, 1)
+    if v > epson:
+        return greedy_action
+    else:
+        if greedy_action == HIT:
+            return STICK
+        else:
+            return HIT
 
         
-def play_episode(player_cards, dealer_cards):
+def play_episode(player_cards, dealer_cards,epson):
     visited_sa_list = []
     while True:
         s = state(player_cards, dealer_cards)
@@ -193,7 +221,7 @@ def play_episode(player_cards, dealer_cards):
             break
         
         # player action       
-        pa = player_action(player_cards, dealer_cards)
+        pa = player_action(player_cards, dealer_cards,epson)
         
         # only remember the  interesting, non obvious actions
         if card_sum(player_cards) >= 12:       
@@ -208,9 +236,9 @@ def play_episode(player_cards, dealer_cards):
         # dealer action (fixed policy)
         if card_sum(dealer_cards) < 17:
             dealer_cards.append(random.choice(POSSIBLE_CARDS))
-    
-    for sa in visited_sa_list:
-        # todo do sth with the reward
+            
+    # episode done, backprop of reward
+    for sa in visited_sa_list:        
         print (sa,r)
         index = Q_dict[sa]
         if Q_initiated[index] == False:
@@ -253,7 +281,7 @@ def main(argv):
         nr_episodes = int(episodes)
     
         
-    
+    epson = 0.05
     if method is None:
         epson_greedy = True
     else:
@@ -272,8 +300,10 @@ def main(argv):
         player_cards = []       
         init_episode(dealer_cards, player_cards)
         
-        r = play_episode(dealer_cards, player_cards)
+        r = play_episode(dealer_cards, player_cards,epson)
         print('reward',r)
+        
+        update_pi()
         
         # TODO: distribute rewards for all states visited during the episode
     
