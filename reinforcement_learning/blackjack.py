@@ -92,6 +92,63 @@ def init_Q():
             Q_initiated.append(False)
             Q_dict[(player_has_usable_ace,dealer_shows_card,player_sum,HIT)] = Q_ind
             Q_ind += 1
+            
+def visualise_pi():
+    pi_ind = 0
+    
+    X = np.empty([11,1]) # dealer shows
+    Y = np.empty([10,1]) # player sum
+    Z = np.empty([10,11])
+    
+    player_has_usable_ace = True
+    
+   
+    n2 = 0    
+    for player_sum in range(12,22):
+        Y[n2] = player_sum
+        n1 = 0
+        for dealer_shows in range(11): # dealer shows ace has value 0
+
+            X[n1] = dealer_shows            
+            Z[n2][n1] = pi[pi_ind]
+            pi_ind += 1
+            n1 += 1
+        n2 += 1
+        
+    X, Y = np.meshgrid(X, Y)
+    
+    fig = plt.figure()
+    plt.contourf( X,Y, Z, cmap=cm.coolwarm)
+    plt.colorbar()
+    plt.title('player has usable ace')
+    plt.show()
+    
+    
+    X = np.empty([11,1]) # dealer shows
+    Y = np.empty([10,1]) # player sum
+    Z = np.empty([10,11])
+    player_has_usable_ace = False
+    
+
+    n2 = 0    
+    for player_sum in range(12,22):
+        Y[n2] = player_sum
+        n1 = 0
+        for dealer_shows in range(11): # dealer shows ace has value 0  
+            #print(player_sum,dealer_shows)            
+            X[n1] = dealer_shows
+            Z[n2][n1] = pi[pi_ind]
+            pi_ind += 1
+            n1 += 1
+        n2 += 1
+        
+    X, Y = np.meshgrid(X, Y)
+    fig = plt.figure()
+    plt.contourf(X,Y, Z, cmap=cm.coolwarm)
+    plt.colorbar()
+    plt.title('player has no usable ace')
+    plt.show()
+
   
 def update_pi():
     # adapt policy to new insights in Q (fully greedy)
@@ -304,9 +361,9 @@ def main(argv):
         print('reward',r)
         
         update_pi()
-        
-        # TODO: distribute rewards for all states visited during the episode
-    
+
+
+    visualise_pi()
         
     
     
