@@ -148,6 +148,19 @@ def visualise_pi():
     plt.colorbar()
     plt.title('player has no usable ace')
     plt.show()
+    
+    for s in state_space:
+        ind = pi_dict[s]
+        print(s,'->',pi[ind])
+        
+    for s in state_space:
+        sa_hit = (s[0],s[1],s[2],HIT)
+        sa_stick = (s[0],s[1],s[2],STICK)
+        ind_hit = Q_dict[sa_hit]
+        ind_stick = Q_dict[sa_stick]
+        print(sa_hit,'->',Q[ind_hit],';',sa_stick,'->',Q[ind_stick])
+        
+        
 
   
 def update_pi(s):
@@ -271,23 +284,35 @@ def play_episode(player_cards, dealer_cards,epson,debugplay):
             
         
         # state evaluation
-        if card_sum(player_cards) > 21:
+        c_p = card_sum(player_cards)
+        c_d = card_sum(dealer_cards)
+        
+        if c_p > 21:
             r= REWARD_BUST
             break
         
-        if card_sum(dealer_cards) > 21:
+        if c_d > 21:
             r=REWARD_WIN
             break
         
-        if card_sum(player_cards) == 21:
-            if card_sum(dealer_cards) == 21:
+        if c_p == 21:
+            if c_d == 21:
                 r= REWARD_DRAW
             else:
                 r=REWARD_WIN
             break
             
-        if card_sum(dealer_cards) == 21:
+        if c_d == 21:
             r = REWARD_BUST
+            break
+        
+        if c_d >= 17:
+            if c_d > c_p:
+                r = REWARD_BUST
+            elif c_d == c_p:
+                r = REWARD_DRAW
+            else:
+                r = REWARD_WIN
             break
         
         # player action       
@@ -304,7 +329,7 @@ def play_episode(player_cards, dealer_cards,epson,debugplay):
         #todo append (s,pa) combination to Q list or dict ?
         
         # dealer action (fixed policy)
-        if card_sum(dealer_cards) < 17:
+        if card_sum(dealer_cards) < 17: #HIT
             dealer_cards.append(random.choice(POSSIBLE_CARDS))
             
     if debugplay == True:
@@ -378,8 +403,8 @@ def main(argv):
         #print(k,'\r')
         
 
-    
-    visualise_pi()
+    if nr_episodes >= 10:
+        visualise_pi()
         
     
     
