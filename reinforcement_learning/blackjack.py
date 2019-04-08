@@ -60,12 +60,12 @@ def init_Q():
             pi_ind += 1
             
             Q.append(0.0);
-            Q_initiated.append(False)
+            Q_initiated.append(0)
             Q_dict[(player_has_usable_ace,dealer_shows_card,player_sum,STICK)] = Q_ind
             Q_ind += 1
             
             Q.append(0.0);
-            Q_initiated.append(False)
+            Q_initiated.append(0)
             Q_dict[(player_has_usable_ace,dealer_shows_card,player_sum,HIT)] = Q_ind
             Q_ind += 1
             
@@ -84,12 +84,12 @@ def init_Q():
             pi_ind += 1
             
             Q.append(0.0);
-            Q_initiated.append(False)
+            Q_initiated.append(0)
             Q_dict[(player_has_usable_ace,dealer_shows_card,player_sum,STICK)] = Q_ind
             Q_ind += 1
             
             Q.append(0.0);
-            Q_initiated.append(False)
+            Q_initiated.append(0)
             Q_dict[(player_has_usable_ace,dealer_shows_card,player_sum,HIT)] = Q_ind
             Q_ind += 1
             
@@ -317,13 +317,13 @@ def play_episode(player_cards, dealer_cards,epson,debugplay):
         if debugplay == True:
             print ('sa',sa)
             print('Q',Q[index])
-        if Q_initiated[index] == False:
-            # first update
-            Q_initiated[index] = True
+        if Q_initiated[index] == 0:
+            # first update            
             Q[index] = r
         else:
             Q[index] = Q[index] + ALPHA*(r - Q[index])
-            
+        Q_initiated[index] = Q_initiated[index] +1
+        
         if debugplay == True:
             print('new Q',Q[index])
             
@@ -354,7 +354,7 @@ def main(argv):
     else:
         debugplay = False
         
-    epson = 0.1
+    epson = 0.01
     if method is None:
         epson_greedy = True
     else:
