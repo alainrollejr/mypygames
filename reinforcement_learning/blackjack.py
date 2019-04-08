@@ -150,21 +150,21 @@ def visualise_pi():
     plt.show()
 
   
-def update_pi():
+def update_pi(s):
     # adapt policy to new insights in Q (fully greedy)
-    for s in state_space:
-        pi_ind = pi_dict[s]
-        s_hit = (s[0],s[1],s[2],HIT)
-        s_stick = (s[0],s[1],s[2],STICK)
-        Q_ind_hit = Q_dict[s_hit]
-        Q_ind_stick = Q_dict[s_stick]
-        Q_hit = Q[Q_ind_hit]
-        Q_stick = Q[Q_ind_stick]
-        
-        if Q_hit > Q_stick:
-            pi[pi_ind] = HIT
-        else:
-            pi[pi_ind] = STICK
+
+    pi_ind = pi_dict[s]
+    s_hit = (s[0],s[1],s[2],HIT)
+    s_stick = (s[0],s[1],s[2],STICK)
+    Q_ind_hit = Q_dict[s_hit]
+    Q_ind_stick = Q_dict[s_stick]
+    Q_hit = Q[Q_ind_hit]
+    Q_stick = Q[Q_ind_stick]
+    
+    if Q_hit >= Q_stick:
+        pi[pi_ind] = HIT
+    else:
+        pi[pi_ind] = STICK
         
         
 
@@ -249,13 +249,20 @@ def player_action(player_cards, dealer_cards, epson):
             return HIT
 
         
-def play_episode(player_cards, dealer_cards,epson):
+def play_episode(player_cards, dealer_cards,epson,debugplay):
     visited_sa_list = []
+    if debugplay == True:
+        print('------------------------------------\n')
+        print('--------  NEW EPISODE   ------------\n')
+        print('------------------------------------\n')
     while True:
         s = state(player_cards, dealer_cards)
-        print('player_cards',player_cards)
-        print('dealer_cards',dealer_cards)
-        print(s)
+        
+        if debugplay == True:
+            print('player_cards',player_cards)
+            print('dealer_cards',dealer_cards)
+            print('state',s)
+            
         
         # state evaluation
         if card_sum(player_cards) > 21:
@@ -294,10 +301,16 @@ def play_episode(player_cards, dealer_cards,epson):
         if card_sum(dealer_cards) < 17:
             dealer_cards.append(random.choice(POSSIBLE_CARDS))
             
+    if debugplay == True:
+        print('reward',r)
+            
     # episode done, backprop of reward
     for sa in visited_sa_list:        
-        print (sa,r)
+                
         index = Q_dict[sa]
+        if debugplay == True:
+            print ('sa',sa)
+            print('Q',Q[index])
         if Q_initiated[index] == False:
             # first update
             Q_initiated[index] = True
@@ -305,19 +318,12 @@ def play_episode(player_cards, dealer_cards,epson):
         else:
             Q[index] = Q[index] + ALPHA*(r - Q[index])
             
-        
-        
+        if debugplay == True:
+            print('new Q',Q[index])
             
-        
+        update_pi((sa[0],sa[1],sa[2]))
             
-        
-        
-        
-        
-        
-        
-    
-    
+
 
 def main(argv):
     
@@ -337,8 +343,12 @@ def main(argv):
     else:
         nr_episodes = int(episodes)
     
+    if nr_episodes < 10:
+        debugplay = True
+    else:
+        debugplay = False
         
-    epson = 0.05
+    epson = 0.2
     if method is None:
         epson_greedy = True
     else:
@@ -357,12 +367,12 @@ def main(argv):
         player_cards = []       
         init_episode(dealer_cards, player_cards)
         
-        r = play_episode(dealer_cards, player_cards,epson)
-        print('reward',r)
+        r = play_episode(dealer_cards, player_cards,epson,debugplay)
+        #print('reward',r)
+        print('%d\r',k)
         
-        update_pi()
 
-
+    
     visualise_pi()
         
     
