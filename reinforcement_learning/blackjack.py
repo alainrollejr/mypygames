@@ -30,7 +30,7 @@ REWARD_DRAW=0.0
 REWARD_BUST=-1.0
 HIT = 1
 STICK = 0
-ALPHA = 0.1 # for moving average approach to Q value for (s,a) iso true average
+ALPHA = 0.5 # for moving average approach to Q value for (s,a) iso true average
 
 S = [] # state space
 pi = [] # policy
@@ -54,7 +54,7 @@ def init_Q():
             else:
                 dealer_shows_card = str(dealer_shows)
                
-            pi.append(HIT)
+            pi.append(random_action())
             state_space.append((player_has_usable_ace,str(dealer_shows_card),player_sum))
             pi_dict[(player_has_usable_ace,dealer_shows_card,player_sum)] = pi_ind
             pi_ind += 1
@@ -78,7 +78,7 @@ def init_Q():
                 dealer_shows_card = str(dealer_shows)
                 
               
-            pi.append(HIT)
+            pi.append(random_action())
             state_space.append((player_has_usable_ace,str(dealer_shows_card),player_sum))
             pi_dict[(player_has_usable_ace,dealer_shows_card,player_sum)] = pi_ind
             pi_ind += 1
@@ -247,7 +247,13 @@ def player_action(player_cards, dealer_cards, epson):
             return STICK
         else:
             return HIT
-
+def random_action():
+    v = random.uniform(0, 1)
+    if v > 0.5:
+        return HIT
+    else:        
+        return STICK
+    
         
 def play_episode(player_cards, dealer_cards,epson,debugplay):
     visited_sa_list = []
@@ -348,7 +354,7 @@ def main(argv):
     else:
         debugplay = False
         
-    epson = 0.2
+    epson = 0.1
     if method is None:
         epson_greedy = True
     else:
@@ -369,7 +375,7 @@ def main(argv):
         
         r = play_episode(dealer_cards, player_cards,epson,debugplay)
         #print('reward',r)
-        print('%d\r',k)
+        #print(k,'\r')
         
 
     
