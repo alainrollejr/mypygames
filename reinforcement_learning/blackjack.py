@@ -31,9 +31,9 @@ REWARD_BUST=-1.0
 HIT = 1
 STICK = 0
 ALPHA = 0.01 # for moving average approach to Q value for (s,a) iso true average
-MAX_EPSON = 0.5
+MAX_EPSON = 0.8
 MIN_EPSON = 0.01
-EPSON_DECAY = 0.9999
+EPSON_DECAY = 0.99999
 
 S = [] # state space
 pi = [] # policy
@@ -50,7 +50,7 @@ def init_Q():
     Q_ind = 0
     player_has_usable_ace = True
     
-    for player_sum in range(12,22):
+    for player_sum in range(12,21):
         for dealer_shows in range(11): # dealer shows ace has value 0
             if dealer_shows==0:
                 dealer_shows_card ='A'
@@ -73,7 +73,7 @@ def init_Q():
             Q_ind += 1
             
     player_has_usable_ace = False
-    for player_sum in range(12,22):
+    for player_sum in range(12,21):
         for dealer_shows in range(11): # dealer shows ace has value 0
             if dealer_shows==0:
                 dealer_shows_card ='A'
@@ -100,14 +100,14 @@ def visualise_pi():
     pi_ind = 0
     
     X = np.empty([11,1]) # dealer shows
-    Y = np.empty([10,1]) # player sum
-    Z = np.empty([10,11])
+    Y = np.empty([9,1]) # player sum
+    Z = np.empty([9,11])
     
     player_has_usable_ace = True
     
    
     n2 = 0    
-    for player_sum in range(12,22):
+    for player_sum in range(12,21):
         Y[n2] = player_sum
         n1 = 0
         for dealer_shows in range(11): # dealer shows ace has value 0
@@ -128,13 +128,13 @@ def visualise_pi():
     
     
     X = np.empty([11,1]) # dealer shows
-    Y = np.empty([10,1]) # player sum
-    Z = np.empty([10,11])
+    Y = np.empty([9,1]) # player sum
+    Z = np.empty([9,11])
     player_has_usable_ace = False
     
 
     n2 = 0    
-    for player_sum in range(12,22):
+    for player_sum in range(12,21):
         Y[n2] = player_sum
         n1 = 0
         for dealer_shows in range(11): # dealer shows ace has value 0  
@@ -310,14 +310,7 @@ def play_episode(player_cards, dealer_cards,epson,debugplay):
             r = REWARD_BUST
             break
         
-        if c_d >= 17:
-            if c_d > c_p:
-                r = REWARD_BUST
-            elif c_d == c_p:
-                r = REWARD_DRAW
-            else:
-                r = REWARD_WIN
-            break
+        
         
         # player action       
         pa = player_action(player_cards, dealer_cards,epson)
@@ -330,14 +323,38 @@ def play_episode(player_cards, dealer_cards,epson,debugplay):
         if pa == HIT:
             player_cards.append(random.choice(POSSIBLE_CARDS))
             
+        if debugplay == True:
+            if pa == HIT:
+                print('player HITs')
+            else:
+                print('player STICKs')
+            
         #todo append (s,pa) combination to Q list or dict ?
         
         # dealer action (fixed policy)
-        if card_sum(dealer_cards) < 17: #HIT
+        if c_d < 17: #HIT
             dealer_cards.append(random.choice(POSSIBLE_CARDS))
+            if debugplay == True:
+                print('dealer HITs')
+        else:          
+            if debugplay == True:
+                print('dealer STICKs')
+                
+            if pa == STICK:
+                if c_d > c_p:
+                    r = REWARD_BUST
+                elif c_d == c_p:
+                    r = REWARD_DRAW
+                else:
+                    r = REWARD_WIN
+                break
+            
+        
             
     if debugplay == True:
+        print('play ends:')              
         print('reward',r)
+        print('----------')
             
     # episode done, backprop of reward
     for sa in visited_sa_list:        
@@ -408,7 +425,7 @@ def main(argv):
         epson = max(epson*EPSON_DECAY,MIN_EPSON)
         
         if k % 1000 == 0:
-            print("\rEpisode {}/{}.".format(k, nr_episodes), end="")
+            print("\rEpisode {}/{} (epson {}).".format(k, nr_episodes,epson), end="")
             sys.stdout.flush()
 
     if nr_episodes >= 10:
