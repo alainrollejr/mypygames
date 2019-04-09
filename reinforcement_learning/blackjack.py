@@ -33,7 +33,7 @@ STICK = 0
 ALPHA = 0.01 # for moving average approach to Q value for (s,a) iso true average
 MAX_EPSON = 0.8
 MIN_EPSON = 0.01
-EPSON_DECAY = 0.99999
+EPSON_DECAY = 0.999999
 
 S = [] # state space
 pi = [] # policy
@@ -350,6 +350,7 @@ def random_action():
         
 def play_episode(player_cards, dealer_cards,epson,debugplay):
     visited_sa_list = []
+    pa = HIT
     if debugplay == True:
         print('------------------------------------\n')
         print('--------  NEW EPISODE   ------------\n')
@@ -387,25 +388,25 @@ def play_episode(player_cards, dealer_cards,epson,debugplay):
             break
         
         
-        
-        # player action       
-        pa = player_action(player_cards, dealer_cards,epson)
-        
-        # only remember the  interesting, non obvious actions
-        if card_sum(player_cards) >= 12:       
-            visited_sa_list.append((s[0],s[1],s[2],pa))
-            
-            
         if pa == HIT:
-            player_cards.append(random.choice(POSSIBLE_CARDS))
+            # only new player action if we did not choose to STICK already
+            # earlier on in the game
+            pa = player_action(player_cards, dealer_cards,epson)
             
-        if debugplay == True:
+            # only remember the  interesting, non obvious actions
+            if card_sum(player_cards) >= 12:       
+                visited_sa_list.append((s[0],s[1],s[2],pa))
+                
+                
             if pa == HIT:
-                print('player HITs')
-            else:
-                print('player STICKs')
-            
-        #todo append (s,pa) combination to Q list or dict ?
+                player_cards.append(random.choice(POSSIBLE_CARDS))
+                
+            if debugplay == True:
+                if pa == HIT:
+                    print('player HITs')
+                else:
+                    print('player STICKs')
+       
         
         # dealer action (fixed policy)
         if c_d < 17: #HIT
@@ -439,12 +440,12 @@ def play_episode(player_cards, dealer_cards,epson,debugplay):
         if debugplay == True:
             print ('sa',sa)
             print('Q',Q[index])
-#        if Q_initiated[index] == 0:
-#            # first update            
-#            Q[index] = r
-#        else:
-#            Q[index] = Q[index] + ALPHA*(r - Q[index])
-        Q[index] = Q[index] + ALPHA*(r - Q[index])
+        if Q_initiated[index] == 0:
+            # first update            
+            Q[index] = r
+        else:
+            Q[index] = Q[index] + ALPHA*(r - Q[index])
+        #Q[index] = Q[index] + ALPHA*(r - Q[index])
         Q_initiated[index] = Q_initiated[index] +1
         
         if debugplay == True:
