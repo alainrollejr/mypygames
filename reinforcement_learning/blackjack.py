@@ -165,7 +165,83 @@ def visualise_pi():
               ';',sa_stick,'->',Q[ind_stick],Q_initiated[ind_stick])
         
         
+def visualise_Q():
+    
+    # we expect the Q value that map to the final policy
+    # to be distinctly positive towards +1.0
+    # values lower than 0.0 point at a policy of best choice under not so good 
+    # conditions (meaning the expected result is still to loose)    
+    
+    pi_ind = 0
+    
+    X = np.empty([11,1]) # dealer shows
+    Y = np.empty([9,1]) # player sum
+    Z = np.empty([9,11])
+    
+    player_has_usable_ace = True
+    
+   
+    n2 = 0    
+    for player_sum in range(12,21):
+        Y[n2] = player_sum
+        n1 = 0
+        for dealer_shows in range(11): # dealer shows ace has value 0
+            
+            if dealer_shows==0:
+                dealer_shows_card ='A'
+            else:
+                dealer_shows_card = str(dealer_shows)
 
+            X[n1] = dealer_shows  
+            Q_ind = Q_dict[(player_has_usable_ace,dealer_shows_card,player_sum,pi[pi_ind])]
+            Z[n2][n1] = Q[Q_ind]
+            pi_ind += 1
+            n1 += 1
+        n2 += 1
+        
+    X, Y = np.meshgrid(X, Y)
+    
+    fig = plt.figure()
+    plt.contourf( X,Y, Z, cmap=cm.coolwarm)
+    plt.colorbar()
+    plt.title('Q for player has usable ace')
+    plt.show()
+    
+    X = np.empty([11,1]) # dealer shows
+    Y = np.empty([9,1]) # player sum
+    Z = np.empty([9,11])
+    
+    player_has_usable_ace = False
+    
+   
+    n2 = 0    
+    for player_sum in range(12,21):
+        Y[n2] = player_sum
+        n1 = 0
+        for dealer_shows in range(11): # dealer shows ace has value 0
+            
+            if dealer_shows==0:
+                dealer_shows_card ='A'
+            else:
+                dealer_shows_card = str(dealer_shows)
+
+            X[n1] = dealer_shows  
+            Q_ind = Q_dict[(player_has_usable_ace,dealer_shows_card,player_sum,pi[pi_ind])]
+            Z[n2][n1] = Q[Q_ind]
+            pi_ind += 1
+            n1 += 1
+        n2 += 1
+        
+    X, Y = np.meshgrid(X, Y)
+    
+    fig = plt.figure()
+    plt.contourf( X,Y, Z, cmap=cm.coolwarm)
+    plt.colorbar()
+    plt.title('Q for player has no usable ace')
+    plt.show()
+    
+    
+    
   
 def update_pi(s):
     # adapt policy to new insights in Q (fully greedy)
@@ -430,6 +506,7 @@ def main(argv):
 
     if nr_episodes >= 10:
         visualise_pi()
+        visualise_Q()
         
     
     
