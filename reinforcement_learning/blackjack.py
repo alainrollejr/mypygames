@@ -50,7 +50,7 @@ def init_Q():
     Q_ind = 0
     player_has_usable_ace = True
     
-    for player_sum in range(12,21):
+    for player_sum in range(12,22):
         for dealer_shows in range(11): # dealer shows ace has value 0
             if dealer_shows==0:
                 dealer_shows_card ='A'
@@ -73,7 +73,7 @@ def init_Q():
             Q_ind += 1
             
     player_has_usable_ace = False
-    for player_sum in range(12,21):
+    for player_sum in range(12,22):
         for dealer_shows in range(11): # dealer shows ace has value 0
             if dealer_shows==0:
                 dealer_shows_card ='A'
@@ -100,14 +100,14 @@ def visualise_pi():
     pi_ind = 0
     
     X = np.empty([11,1]) # dealer shows
-    Y = np.empty([9,1]) # player sum
-    Z = np.empty([9,11])
+    Y = np.empty([10,1]) # player sum
+    Z = np.empty([10,11])
     
     player_has_usable_ace = True
     
    
     n2 = 0    
-    for player_sum in range(12,21):
+    for player_sum in range(12,22):
         Y[n2] = player_sum
         n1 = 0
         for dealer_shows in range(11): # dealer shows ace has value 0
@@ -128,13 +128,13 @@ def visualise_pi():
     
     
     X = np.empty([11,1]) # dealer shows
-    Y = np.empty([9,1]) # player sum
-    Z = np.empty([9,11])
+    Y = np.empty([10,1]) # player sum
+    Z = np.empty([10,11])
     player_has_usable_ace = False
     
 
     n2 = 0    
-    for player_sum in range(12,21):
+    for player_sum in range(12,22):
         Y[n2] = player_sum
         n1 = 0
         for dealer_shows in range(11): # dealer shows ace has value 0  
@@ -175,14 +175,14 @@ def visualise_Q():
     pi_ind = 0
     
     X = np.empty([11,1]) # dealer shows
-    Y = np.empty([9,1]) # player sum
-    Z = np.empty([9,11])
+    Y = np.empty([10,1]) # player sum
+    Z = np.empty([10,11])
     
     player_has_usable_ace = True
     
    
     n2 = 0    
-    for player_sum in range(12,21):
+    for player_sum in range(12,22):
         Y[n2] = player_sum
         n1 = 0
         for dealer_shows in range(11): # dealer shows ace has value 0
@@ -208,14 +208,14 @@ def visualise_Q():
     plt.show()
     
     X = np.empty([11,1]) # dealer shows
-    Y = np.empty([9,1]) # player sum
-    Z = np.empty([9,11])
+    Y = np.empty([10,1]) # player sum
+    Z = np.empty([10,11])
     
     player_has_usable_ace = False
     
    
     n2 = 0    
-    for player_sum in range(12,21):
+    for player_sum in range(12,22):
         Y[n2] = player_sum
         n1 = 0
         for dealer_shows in range(11): # dealer shows ace has value 0
@@ -351,82 +351,92 @@ def random_action():
 def play_episode(player_cards, dealer_cards,epson,debugplay):
     visited_sa_list = []
     pa = HIT
+
+    episode_end = False
+    
     if debugplay == True:
         print('------------------------------------\n')
         print('--------  NEW EPISODE   ------------\n')
         print('------------------------------------\n')
-    while True:
+    
+    s = state(player_cards, dealer_cards)
+    
+    if debugplay == True:
+        print('player_cards',player_cards)
+        print('dealer_cards',dealer_cards)
+
+        
+    
+    # state evaluation
+    c_p = card_sum(player_cards)
+    c_d = card_sum(dealer_cards)
+    
+    # first: player turn
+    while pa == HIT:
         s = state(player_cards, dealer_cards)
+        pa = player_action(player_cards, dealer_cards,epson)
         
-        if debugplay == True:
-            print('player_cards',player_cards)
-            print('dealer_cards',dealer_cards)
-            print('state',s)
+        # only remember the  interesting, non obvious actions
+        if card_sum(player_cards) >= 12:       
+            visited_sa_list.append((s[0],s[1],s[2],pa))
             
-        
-        # state evaluation
-        c_p = card_sum(player_cards)
-        c_d = card_sum(dealer_cards)
-        
-        if c_p > 21:
-            r= REWARD_BUST
-            break
-        
-        if c_d > 21:
-            r=REWARD_WIN
-            break
-        
-        if c_p == 21:
-            if c_d == 21:
-                r= REWARD_DRAW
-            else:
-                r=REWARD_WIN
-            break
             
-        if c_d == 21:
-            r = REWARD_BUST
-            break
-        
-        
         if pa == HIT:
-            # only new player action if we did not choose to STICK already
-            # earlier on in the game
-            pa = player_action(player_cards, dealer_cards,epson)
+            player_cards.append(random.choice(POSSIBLE_CARDS))
             
-            # only remember the  interesting, non obvious actions
-            if card_sum(player_cards) >= 12:       
-                visited_sa_list.append((s[0],s[1],s[2],pa))
-                
-                
+        if debugplay == True:
             if pa == HIT:
-                player_cards.append(random.choice(POSSIBLE_CARDS))
+                print('player HITs')
+                print('player_cards',player_cards)
+            else:
+                print('player STICKs')
+            print('state',s)
                 
-            if debugplay == True:
-                if pa == HIT:
-                    print('player HITs')
-                else:
-                    print('player STICKs')
-       
+        c_p = card_sum(player_cards)
+        if c_p > 21:
+            episode_end = True
+            break
+    if debugplay == True:
+        print('player_cards',player_cards)
         
+    
+    while episode_end == False:         
         # dealer action (fixed policy)
         if c_d < 17: #HIT
             dealer_cards.append(random.choice(POSSIBLE_CARDS))
             if debugplay == True:
                 print('dealer HITs')
-        else:          
+                print('dealer_cards',dealer_cards)
+                
+        else:     
             if debugplay == True:
                 print('dealer STICKs')
-                
-            if pa == STICK:
-                if c_d > c_p:
-                    r = REWARD_BUST
-                elif c_d == c_p:
-                    r = REWARD_DRAW
-                else:
-                    r = REWARD_WIN
-                break
+            episode_end = True
+        c_d = card_sum(dealer_cards)
+            
+           
+    
+    
+    if c_d > 21:
+        r=REWARD_WIN
+    elif c_d == 21:
+        if c_p == 21:
+            r= REWARD_DRAW                    
+        else:
+            r=REWARD_BUST
+    else:
+        if c_p > 21:
+            r = REWARD_BUST
+        else:            
+            if c_d > c_p:
+                r = REWARD_BUST
+            elif c_p > c_d:
+                r = REWARD_WIN
+            else: # equals
+                r = REWARD_DRAW
             
         
+      
             
     if debugplay == True:
         print('play ends:')              
@@ -440,12 +450,12 @@ def play_episode(player_cards, dealer_cards,epson,debugplay):
         if debugplay == True:
             print ('sa',sa)
             print('Q',Q[index])
-        if Q_initiated[index] == 0:
-            # first update            
-            Q[index] = r
-        else:
-            Q[index] = Q[index] + ALPHA*(r - Q[index])
-        #Q[index] = Q[index] + ALPHA*(r - Q[index])
+#        if Q_initiated[index] == 0:
+#            # first update            
+#            Q[index] = r
+#        else:
+#            Q[index] = Q[index] + ALPHA*(r - Q[index])
+        Q[index] = Q[index] + ALPHA*(r - Q[index])
         Q_initiated[index] = Q_initiated[index] +1
         
         if debugplay == True:
