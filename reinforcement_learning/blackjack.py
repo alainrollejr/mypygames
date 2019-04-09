@@ -31,7 +31,7 @@ REWARD_BUST=-1.0
 HIT = 1
 STICK = 0
 ALPHA = 0.01 # for moving average approach to Q value for (s,a) iso true average
-MAX_EPSON = 0.9
+MAX_EPSON = 0.5
 MIN_EPSON = 0.01
 EPSON_DECAY = 0.99999
 
@@ -254,13 +254,13 @@ def update_pi(s):
     Q_hit = Q[Q_ind_hit]
     Q_stick = Q[Q_ind_stick]
     
-    if ((Q_initiated[Q_ind_hit]) > 0) and ((Q_initiated[Q_ind_stick]) > 0):
-        if Q_hit > Q_stick:
-            pi[pi_ind] = HIT
-        elif Q_hit < Q_stick:
-            pi[pi_ind] = STICK
-        else: # equal Q, break tie randomly
-            pi[pi_ind] = random_action()
+    #if ((Q_initiated[Q_ind_hit]) > 0) and ((Q_initiated[Q_ind_stick]) > 0):
+    if Q_hit > Q_stick:
+        pi[pi_ind] = HIT
+    elif Q_hit < Q_stick:
+        pi[pi_ind] = STICK
+    else: # equal Q, break tie randomly
+        pi[pi_ind] = random_action()
         
         
 
@@ -483,7 +483,7 @@ def main(argv):
     else:
         nr_episodes = int(episodes)
     
-    if nr_episodes < 10:
+    if nr_episodes < 100:
         debugplay = True
     else:
         debugplay = False
@@ -515,7 +515,7 @@ def main(argv):
             print("\rEpisode {}/{} (epson {}).".format(k, nr_episodes,epson), end="")
             sys.stdout.flush()
 
-    if nr_episodes >= 10:
+    if nr_episodes >= 100:
         visualise_pi()
         visualise_Q()
         
