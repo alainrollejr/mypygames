@@ -31,9 +31,9 @@ REWARD_BUST=-1.0
 HIT = 1
 STICK = 0
 ALPHA = 0.01 # for moving average approach to Q value for (s,a) iso true average
-MAX_EPSON = 0.8
+MAX_EPSON = 0.9
 MIN_EPSON = 0.01
-EPSON_DECAY = 0.999999
+EPSON_DECAY = 0.99999
 
 S = [] # state space
 pi = [] # policy
@@ -254,12 +254,13 @@ def update_pi(s):
     Q_hit = Q[Q_ind_hit]
     Q_stick = Q[Q_ind_stick]
     
-    if Q_hit > Q_stick:
-        pi[pi_ind] = HIT
-    elif Q_hit < Q_stick:
-        pi[pi_ind] = STICK
-    else: # equal Q, break tie randomly
-        pi[pi_ind] = random_action()
+    if ((Q_initiated[Q_ind_hit]) > 0) and ((Q_initiated[Q_ind_stick]) > 0):
+        if Q_hit > Q_stick:
+            pi[pi_ind] = HIT
+        elif Q_hit < Q_stick:
+            pi[pi_ind] = STICK
+        else: # equal Q, break tie randomly
+            pi[pi_ind] = random_action()
         
         
 
@@ -354,10 +355,8 @@ def play_episode(player_cards, dealer_cards,epson,debugplay):
 
     episode_end = False
     
-    if debugplay == True:
-        print('------------------------------------\n')
+    if debugplay == True:        
         print('--------  NEW EPISODE   ------------\n')
-        print('------------------------------------\n')
     
     s = state(player_cards, dealer_cards)
     
@@ -377,7 +376,7 @@ def play_episode(player_cards, dealer_cards,epson,debugplay):
         pa = player_action(player_cards, dealer_cards,epson)
         
         # only remember the  interesting, non obvious actions
-        if card_sum(player_cards) >= 12:       
+        if c_p >= 12:       
             visited_sa_list.append((s[0],s[1],s[2],pa))
             
             
@@ -407,18 +406,19 @@ def play_episode(player_cards, dealer_cards,epson,debugplay):
             if debugplay == True:
                 print('dealer HITs')
                 print('dealer_cards',dealer_cards)
+            c_d = card_sum(dealer_cards)
                 
         else:     
             if debugplay == True:
                 print('dealer STICKs')
             episode_end = True
-        c_d = card_sum(dealer_cards)
-            
-           
-    
-    
+        
+       
     if c_d > 21:
-        r=REWARD_WIN
+        if c_p > 21:
+            r = REWARD_BUST
+        else:
+            r=REWARD_WIN
     elif c_d == 21:
         if c_p == 21:
             r= REWARD_DRAW                    
