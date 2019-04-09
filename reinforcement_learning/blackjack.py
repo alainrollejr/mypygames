@@ -31,7 +31,9 @@ REWARD_BUST=-1.0
 HIT = 1
 STICK = 0
 ALPHA = 0.01 # for moving average approach to Q value for (s,a) iso true average
-EPSON = 0.2
+MAX_EPSON = 0.5
+MIN_EPSON = 0.01
+EPSON_DECAY = 0.9999
 
 S = [] # state space
 pi = [] # policy
@@ -260,10 +262,8 @@ def player_action(player_cards, dealer_cards, epson):
     if v > epson:
         return greedy_action
     else:
-        if greedy_action == HIT:
-            return STICK
-        else:
-            return HIT
+        return random_action()
+    
 def random_action():
     v = random.uniform(0, 1)
     if v > 0.5:
@@ -395,7 +395,7 @@ def main(argv):
         else:
             print('unsupported method, reverting to default method ',method)
             epson_greedy = True
-    
+    epson = MAX_EPSON
     init_Q()
     #print(Q_dict)
     for k in range(nr_episodes):
@@ -403,10 +403,13 @@ def main(argv):
         player_cards = []       
         init_episode(dealer_cards, player_cards)
         
-        r = play_episode(dealer_cards, player_cards,EPSON,debugplay)
-        #print('reward',r)
-        #print(k,'\r')
+        play_episode(dealer_cards, player_cards,epson,debugplay)
+    
+        epson = max(epson*EPSON_DECAY,MIN_EPSON)
         
+        if k % 1000 == 0:
+            print("\rEpisode {}/{}.".format(k, nr_episodes), end="")
+            sys.stdout.flush()
 
     if nr_episodes >= 10:
         visualise_pi()
