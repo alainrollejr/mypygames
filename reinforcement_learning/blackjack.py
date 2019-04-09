@@ -30,7 +30,8 @@ REWARD_DRAW=0.0
 REWARD_BUST=-1.0
 HIT = 1
 STICK = 0
-ALPHA = 0.5 # for moving average approach to Q value for (s,a) iso true average
+ALPHA = 0.01 # for moving average approach to Q value for (s,a) iso true average
+EPSON = 0.2
 
 S = [] # state space
 pi = [] # policy
@@ -158,7 +159,8 @@ def visualise_pi():
         sa_stick = (s[0],s[1],s[2],STICK)
         ind_hit = Q_dict[sa_hit]
         ind_stick = Q_dict[sa_stick]
-        print(sa_hit,'->',Q[ind_hit],';',sa_stick,'->',Q[ind_stick])
+        print(sa_hit,'->',Q[ind_hit],Q_initiated[ind_hit],
+              ';',sa_stick,'->',Q[ind_stick],Q_initiated[ind_stick])
         
         
 
@@ -174,10 +176,12 @@ def update_pi(s):
     Q_hit = Q[Q_ind_hit]
     Q_stick = Q[Q_ind_stick]
     
-    if Q_hit >= Q_stick:
+    if Q_hit > Q_stick:
         pi[pi_ind] = HIT
-    else:
+    elif Q_hit < Q_stick:
         pi[pi_ind] = STICK
+    else: # equal Q, break tie randomly
+        pi[pi_ind] = random_action()
         
         
 
@@ -342,11 +346,12 @@ def play_episode(player_cards, dealer_cards,epson,debugplay):
         if debugplay == True:
             print ('sa',sa)
             print('Q',Q[index])
-        if Q_initiated[index] == 0:
-            # first update            
-            Q[index] = r
-        else:
-            Q[index] = Q[index] + ALPHA*(r - Q[index])
+#        if Q_initiated[index] == 0:
+#            # first update            
+#            Q[index] = r
+#        else:
+#            Q[index] = Q[index] + ALPHA*(r - Q[index])
+        Q[index] = Q[index] + ALPHA*(r - Q[index])
         Q_initiated[index] = Q_initiated[index] +1
         
         if debugplay == True:
@@ -379,7 +384,7 @@ def main(argv):
     else:
         debugplay = False
         
-    epson = 0.01
+   
     if method is None:
         epson_greedy = True
     else:
@@ -398,7 +403,7 @@ def main(argv):
         player_cards = []       
         init_episode(dealer_cards, player_cards)
         
-        r = play_episode(dealer_cards, player_cards,epson,debugplay)
+        r = play_episode(dealer_cards, player_cards,EPSON,debugplay)
         #print('reward',r)
         #print(k,'\r')
         
