@@ -23,7 +23,7 @@ import argparse
 import numpy as np
 import random
 
-POSSIBLE_CARDS = ('A',1,2,3,4,5,6,7,8,9,10) # all face cards have value 10
+POSSIBLE_CARDS = ('A',2,3,4,5,6,7,8,9,10) # all face cards have value 10
 GAMMA = 1.0 # discount factor
 REWARD_WIN=+1.0
 REWARD_DRAW=0.0
@@ -38,13 +38,70 @@ EVAL_EPISODES = 1000
 
 S = [] # state space
 pi = [] # policy
+optimal_pi = [] # optimal policy as per [Thorp], for benchmarking
 Q = [] # action value function
 Q_initiated = []
 state_space = []
 Q_dict = {} # dictionary that maps state to Q table index
 pi_dict = {}
 
-# episode variables
+def init_optimal_pi():
+    
+    
+    player_has_usable_ace = True
+    
+    for player_sum in range(12,22):
+        for dealer_shows in range(1,11): # dealer shows ace has value 0
+            if dealer_shows==1:
+                dealer_shows_card ='A'
+                if player_sum >= 19:
+                    optimal_pi.append(STICK)
+                else:
+                    optimal_pi.append(HIT)
+            else:
+                dealer_shows_card = str(dealer_shows)
+                
+                if (dealer_shows >= 2) and (dealer_shows <= 8):
+                    if player_sum >= 18:
+                        optimal_pi.append(STICK)
+                    else:
+                        optimal_pi.append(HIT)
+                else:
+                    if player_sum >= 19:
+                        optimal_pi.append(STICK)
+                    else:
+                        optimal_pi.append(HIT)
+            
+            
+    player_has_usable_ace = False
+    for player_sum in range(12,22):
+        for dealer_shows in range(1,11): # dealer shows ace has value 0
+            if dealer_shows==1:
+                dealer_shows_card ='A'
+                
+                if player_sum >= 17:
+                    optimal_pi.append(STICK)
+                else:
+                    optimal_pi.append(HIT)
+                
+            else:
+                dealer_shows_card = str(dealer_shows)
+
+                if (dealer_shows >= 2) and (dealer_shows <= 3):
+                    if player_sum >= 13:
+                        optimal_pi.append(STICK)
+                    else:
+                        optimal_pi.append(HIT)
+                elif (dealer_shows >= 4) and (dealer_shows <= 6):
+                    if player_sum >= 12:
+                        optimal_pi.append(STICK)
+                    else:
+                        optimal_pi.append(HIT)
+                else:
+                    if player_sum >= 17:
+                        optimal_pi.append(STICK)
+                    else:
+                        optimal_pi.append(HIT)
 
 def init_Q():
     pi_ind = 0
@@ -52,8 +109,8 @@ def init_Q():
     player_has_usable_ace = True
     
     for player_sum in range(12,22):
-        for dealer_shows in range(11): # dealer shows ace has value 0
-            if dealer_shows==0:
+        for dealer_shows in range(1,11): # dealer shows ace has value 0
+            if dealer_shows==1:
                 dealer_shows_card ='A'
             else:
                 dealer_shows_card = str(dealer_shows)
@@ -75,8 +132,8 @@ def init_Q():
             
     player_has_usable_ace = False
     for player_sum in range(12,22):
-        for dealer_shows in range(11): # dealer shows ace has value 0
-            if dealer_shows==0:
+        for dealer_shows in range(1,11): # dealer shows ace has value 0
+            if dealer_shows==1:
                 dealer_shows_card ='A'
             else:
                 dealer_shows_card = str(dealer_shows)
@@ -100,9 +157,9 @@ def init_Q():
 def visualise_pi():
     pi_ind = 0
     
-    X = np.empty([11,1]) # dealer shows
+    X = np.empty([10,1]) # dealer shows
     Y = np.empty([10,1]) # player sum
-    Z = np.empty([10,11])
+    Z = np.empty([10,10])
     
     player_has_usable_ace = True
     
@@ -111,7 +168,7 @@ def visualise_pi():
     for player_sum in range(12,22):
         Y[n2] = player_sum
         n1 = 0
-        for dealer_shows in range(11): # dealer shows ace has value 0
+        for dealer_shows in range(1,11): # dealer shows ace has value 1
 
             X[n1] = dealer_shows            
             Z[n2][n1] = pi[pi_ind]
@@ -128,9 +185,9 @@ def visualise_pi():
     plt.show()
     
     
-    X = np.empty([11,1]) # dealer shows
+    X = np.empty([10,1]) # dealer shows
     Y = np.empty([10,1]) # player sum
-    Z = np.empty([10,11])
+    Z = np.empty([10,10])
     player_has_usable_ace = False
     
 
@@ -138,7 +195,7 @@ def visualise_pi():
     for player_sum in range(12,22):
         Y[n2] = player_sum
         n1 = 0
-        for dealer_shows in range(11): # dealer shows ace has value 0  
+        for dealer_shows in range(1,11): # dealer shows ace has value 1 
             #print(player_sum,dealer_shows)            
             X[n1] = dealer_shows
             Z[n2][n1] = pi[pi_ind]
@@ -175,9 +232,9 @@ def visualise_Q():
     
     pi_ind = 0
     
-    X = np.empty([11,1]) # dealer shows
+    X = np.empty([10,1]) # dealer shows
     Y = np.empty([10,1]) # player sum
-    Z = np.empty([10,11])
+    Z = np.empty([10,10])
     
     player_has_usable_ace = True
     
@@ -186,9 +243,9 @@ def visualise_Q():
     for player_sum in range(12,22):
         Y[n2] = player_sum
         n1 = 0
-        for dealer_shows in range(11): # dealer shows ace has value 0
+        for dealer_shows in range(1,11): # dealer shows ace has value 1
             
-            if dealer_shows==0:
+            if dealer_shows==1:
                 dealer_shows_card ='A'
             else:
                 dealer_shows_card = str(dealer_shows)
@@ -208,9 +265,9 @@ def visualise_Q():
     plt.title('Q for player has usable ace')
     plt.show()
     
-    X = np.empty([11,1]) # dealer shows
+    X = np.empty([10,1]) # dealer shows
     Y = np.empty([10,1]) # player sum
-    Z = np.empty([10,11])
+    Z = np.empty([10,10])
     
     player_has_usable_ace = False
     
@@ -219,9 +276,9 @@ def visualise_Q():
     for player_sum in range(12,22):
         Y[n2] = player_sum
         n1 = 0
-        for dealer_shows in range(11): # dealer shows ace has value 0
+        for dealer_shows in range(1,11): # dealer shows ace has value 0
             
-            if dealer_shows==0:
+            if dealer_shows==1:
                 dealer_shows_card ='A'
             else:
                 dealer_shows_card = str(dealer_shows)
