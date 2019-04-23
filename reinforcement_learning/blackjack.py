@@ -34,6 +34,7 @@ ALPHA = 0.01 # for moving average approach to Q value for (s,a) iso true average
 MAX_EPSON = 0.5
 MIN_EPSON = 0.01
 EPSON_DECAY = 0.99999
+EVAL_EPISODES = 1000
 
 S = [] # state space
 pi = [] # policy
@@ -442,7 +443,11 @@ def play_episode(player_cards, dealer_cards,epson,debugplay):
         print('play ends:')              
         print('reward',r)
         print('----------')
-            
+        
+    return (visited_sa_list, r)
+
+
+def backprop(visited_sa_list, r, debugplay):            
     # episode done, backprop of reward
     for sa in visited_sa_list:        
                 
@@ -507,7 +512,8 @@ def main(argv):
         player_cards = []       
         init_episode(dealer_cards, player_cards)
         
-        play_episode(dealer_cards, player_cards,epson,debugplay)
+        result = play_episode(dealer_cards, player_cards,epson,debugplay)
+        backprop(result[0], result[1], debugplay)
     
         epson = max(epson*EPSON_DECAY,MIN_EPSON)
         
@@ -518,6 +524,29 @@ def main(argv):
     if nr_episodes >= 100:
         visualise_pi()
         visualise_Q()
+        
+    player_wins = 0
+    dealer_wins = 0
+    draws = 0
+    for k in range(EVAL_EPISODES):
+        dealer_cards = []
+        player_cards = []       
+        init_episode(dealer_cards, player_cards)
+        
+        result = play_episode(dealer_cards, player_cards,epson,debugplay)
+        if result[1] > 0:
+            player_wins += 1
+        elif result[1] < 0:
+            dealer_wins += 1
+        else:
+            draws += 1
+    
+    print('policy testing:')
+    print('---------------')
+    print('player wins',100*player_wins/EVAL_EPISODES,'%')
+    print('dealer wins',100*dealer_wins/EVAL_EPISODES,'%')
+    print('draws',100*draws/EVAL_EPISODES,'%')
+    
         
     
     
