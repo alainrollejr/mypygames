@@ -34,7 +34,7 @@ ALPHA = 0.01 # for moving average approach to Q value for (s,a) iso true average
 MAX_EPSON = 0.5
 MIN_EPSON = 0.01
 EPSON_DECAY = 0.99999
-EVAL_EPISODES = 1000
+EVAL_EPISODES = 100000
 
 S = [] # state space
 pi = [] # policy
@@ -154,7 +154,7 @@ def init_Q():
             Q_dict[(player_has_usable_ace,dealer_shows_card,player_sum,HIT)] = Q_ind
             Q_ind += 1
             
-def visualise_pi():
+def visualise_pi(policy):
     pi_ind = 0
     
     X = np.empty([10,1]) # dealer shows
@@ -171,7 +171,7 @@ def visualise_pi():
         for dealer_shows in range(1,11): # dealer shows ace has value 1
 
             X[n1] = dealer_shows            
-            Z[n2][n1] = pi[pi_ind]
+            Z[n2][n1] = policy[pi_ind]
             pi_ind += 1
             n1 += 1
         n2 += 1
@@ -198,7 +198,7 @@ def visualise_pi():
         for dealer_shows in range(1,11): # dealer shows ace has value 1 
             #print(player_sum,dealer_shows)            
             X[n1] = dealer_shows
-            Z[n2][n1] = pi[pi_ind]
+            Z[n2][n1] = policy[pi_ind]
             pi_ind += 1
             n1 += 1
         n2 += 1
@@ -212,7 +212,7 @@ def visualise_pi():
     
     for s in state_space:
         ind = pi_dict[s]
-        print(s,'->',pi[ind])
+        print(s,'->',policy[ind])
         
     for s in state_space:
         sa_hit = (s[0],s[1],s[2],HIT)
@@ -383,7 +383,7 @@ def card_sum(cards):
 def state(player_cards, dealer_cards):
     return (has_usable_ace(player_cards),str(dealer_cards[0]),card_sum(player_cards))
 
-def player_action(player_cards, dealer_cards, epson):
+def player_action(player_cards, dealer_cards, policy,epson):
     c = card_sum(player_cards)
     if c < 12:
         return HIT
@@ -391,7 +391,7 @@ def player_action(player_cards, dealer_cards, epson):
         return STICK
        
     index = pi_dict[state(player_cards, dealer_cards)]
-    greedy_action = pi[index]
+    greedy_action = policy[index]
     
     v = random.uniform(0, 1)
     if v > epson:
@@ -407,7 +407,7 @@ def random_action():
         return STICK
     
         
-def play_episode(player_cards, dealer_cards,epson,debugplay):
+def play_episode(player_cards, dealer_cards,policy,epson,debugplay):
     visited_sa_list = []
     pa = HIT
 
@@ -431,7 +431,7 @@ def play_episode(player_cards, dealer_cards,epson,debugplay):
     # first: player turn
     while pa == HIT:
         s = state(player_cards, dealer_cards)
-        pa = player_action(player_cards, dealer_cards,epson)
+        pa = player_action(player_cards, dealer_cards,policy,epson)
         
         # only remember the  interesting, non obvious actions
         if c_p >= 12:       
@@ -525,7 +525,30 @@ def backprop(visited_sa_list, r, debugplay):
             
         update_pi((sa[0],sa[1],sa[2]))
             
-
+def test_pi(policy):
+    player_wins = 0
+    dealer_wins = 0
+    draws = 0
+    epson = 0 #epson = 0: no exploration
+    debugplay = False
+    for k in range(EVAL_EPISODES):
+        dealer_cards = []
+        player_cards = []       
+        init_episode(dealer_cards, player_cards)
+        
+        result = play_episode(dealer_cards, player_cards,policy,epson,debugplay)
+        if result[1] > 0:
+            player_wins += 1
+        elif result[1] < 0:
+            dealer_wins += 1
+        else:
+            draws += 1
+    
+    print('policy testing:')
+    print('---------------')
+    print('player wins',100*player_wins/EVAL_EPISODES,'%')
+    print('dealer wins',100*dealer_wins/EVAL_EPISODES,'%')
+    print('draws',100*draws/EVAL_EPISODES,'%')
 
 def main(argv):
     
@@ -563,13 +586,16 @@ def main(argv):
             epson_greedy = True
     epson = MAX_EPSON
     init_Q()
+    init_optimal_pi()
+    visualise_pi(optimal_pi)
+    
     #print(Q_dict)
     for k in range(nr_episodes):
         dealer_cards = []
         player_cards = []       
         init_episode(dealer_cards, player_cards)
         
-        result = play_episode(dealer_cards, player_cards,epson,debugplay)
+        result = play_episode(dealer_cards, player_cards,pi,epson,debugplay)
         backprop(result[0], result[1], debugplay)
     
         epson = max(epson*EPSON_DECAY,MIN_EPSON)
@@ -579,30 +605,14 @@ def main(argv):
             sys.stdout.flush()
 
     if nr_episodes >= 100:
-        visualise_pi()
+        visualise_pi(pi)
         visualise_Q()
         
-    player_wins = 0
-    dealer_wins = 0
-    draws = 0
-    for k in range(EVAL_EPISODES):
-        dealer_cards = []
-        player_cards = []       
-        init_episode(dealer_cards, player_cards)
+    test_pi(pi) 
+    print('Thorp policy:')
+    test_pi(optimal_pi) 
         
-        result = play_episode(dealer_cards, player_cards,epson,debugplay)
-        if result[1] > 0:
-            player_wins += 1
-        elif result[1] < 0:
-            dealer_wins += 1
-        else:
-            draws += 1
     
-    print('policy testing:')
-    print('---------------')
-    print('player wins',100*player_wins/EVAL_EPISODES,'%')
-    print('dealer wins',100*dealer_wins/EVAL_EPISODES,'%')
-    print('draws',100*draws/EVAL_EPISODES,'%')
     
         
     
