@@ -22,8 +22,10 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 import argparse
 import numpy as np
 import random
+from numpy.random import choice
 
-POSSIBLE_CARDS = ('A',2,3,4,5,6,7,8,9,10) # all face cards have value 10
+POSSIBLE_CARDS = (1,2,3,4,5,6,7,8,9,10) # all face cards have value 10
+CARD_WEIGHTS =   (4.0/52.0,4.0/52.0,4.0/52.0,4.0/52.0,4.0/52.0,4.0/52.0,4.0/52.0,4.0/52.0,4.0/52.0,16.0/52.0)
 GAMMA = 1.0 # discount factor
 REWARD_WIN=+1.0
 REWARD_DRAW=0.0
@@ -34,7 +36,7 @@ ALPHA = 0.01 # for moving average approach to Q value for (s,a) iso true average
 MAX_EPSON = 0.5
 MIN_EPSON = 0.01
 EPSON_DECAY = 0.99999
-EVAL_EPISODES = 100000
+EVAL_EPISODES = 1000
 
 S = [] # state space
 pi = [] # policy
@@ -53,7 +55,7 @@ def init_optimal_pi():
     for player_sum in range(12,22):
         for dealer_shows in range(1,11): # dealer shows ace has value 0
             if dealer_shows==1:
-                dealer_shows_card ='A'
+                dealer_shows_card =1
                 if player_sum >= 19:
                     optimal_pi.append(STICK)
                 else:
@@ -77,7 +79,7 @@ def init_optimal_pi():
     for player_sum in range(12,22):
         for dealer_shows in range(1,11): # dealer shows ace has value 0
             if dealer_shows==1:
-                dealer_shows_card ='A'
+                dealer_shows_card =1
                 
                 if player_sum >= 17:
                     optimal_pi.append(STICK)
@@ -110,10 +112,8 @@ def init_Q():
     
     for player_sum in range(12,22):
         for dealer_shows in range(1,11): # dealer shows ace has value 0
-            if dealer_shows==1:
-                dealer_shows_card ='A'
-            else:
-                dealer_shows_card = str(dealer_shows)
+            
+            dealer_shows_card = str(dealer_shows)
                
             pi.append(random_action())
             state_space.append((player_has_usable_ace,str(dealer_shows_card),player_sum))
@@ -133,10 +133,8 @@ def init_Q():
     player_has_usable_ace = False
     for player_sum in range(12,22):
         for dealer_shows in range(1,11): # dealer shows ace has value 0
-            if dealer_shows==1:
-                dealer_shows_card ='A'
-            else:
-                dealer_shows_card = str(dealer_shows)
+            
+            dealer_shows_card = str(dealer_shows)
                 
               
             pi.append(random_action())
@@ -245,10 +243,8 @@ def visualise_Q():
         n1 = 0
         for dealer_shows in range(1,11): # dealer shows ace has value 1
             
-            if dealer_shows==1:
-                dealer_shows_card ='A'
-            else:
-                dealer_shows_card = str(dealer_shows)
+            
+            dealer_shows_card = str(dealer_shows)
 
             X[n1] = dealer_shows  
             Q_ind = Q_dict[(player_has_usable_ace,dealer_shows_card,player_sum,pi[pi_ind])]
@@ -278,10 +274,8 @@ def visualise_Q():
         n1 = 0
         for dealer_shows in range(1,11): # dealer shows ace has value 0
             
-            if dealer_shows==1:
-                dealer_shows_card ='A'
-            else:
-                dealer_shows_card = str(dealer_shows)
+            
+            dealer_shows_card = str(dealer_shows)
 
             X[n1] = dealer_shows  
             Q_ind = Q_dict[(player_has_usable_ace,dealer_shows_card,player_sum,pi[pi_ind])]
@@ -324,15 +318,15 @@ def update_pi(s):
 
 def init_episode(dealer_cards, player_cards):  
     
-    dealer_cards.append(random.choice(POSSIBLE_CARDS)) #this is what the dealer shows
-    dealer_cards.append(random.choice(POSSIBLE_CARDS))
+    dealer_cards.append(choice(POSSIBLE_CARDS,p=CARD_WEIGHTS).astype(np.int)) #this is what the dealer shows
+    dealer_cards.append(choice(POSSIBLE_CARDS,p=CARD_WEIGHTS).astype(np.int))
     
-    player_cards.append(random.choice(POSSIBLE_CARDS))
-    player_cards.append(random.choice(POSSIBLE_CARDS))
+    player_cards.append(choice(POSSIBLE_CARDS,p=CARD_WEIGHTS).astype(np.int))
+    player_cards.append(choice(POSSIBLE_CARDS,p=CARD_WEIGHTS).astype(np.int))
     
 def has_ace(cards):
     for c in cards:
-        if c == 'A':
+        if c == 1:
             return True
     return False
 
@@ -341,7 +335,7 @@ def has_usable_ace(cards):
     ace_found = False
     sum = 0
     for c in cards:
-        if c == 'A':
+        if c == 1:
             ace_found = True
             if ace_used == False:
                 ace_used = True
@@ -364,7 +358,7 @@ def card_sum(cards):
     ace_used = False
     if has_usable_ace(cards) == True:
         for c in cards:
-            if c != 'A':
+            if c != 1:
                 c_sum += int(c)
             else:
                 if ace_used == False:
@@ -374,7 +368,7 @@ def card_sum(cards):
                     c_sum +=1 # watch out for more than 1 ace
     else:
         for c in cards:
-            if c != 'A':
+            if c != 1:
                 c_sum += int(c)
             else:
                 c_sum += 1
@@ -411,7 +405,8 @@ def play_episode(player_cards, dealer_cards,policy,epson,debugplay):
     visited_sa_list = []
     pa = HIT
 
-    episode_end = False
+    episode_end = False   
+    
     
     if debugplay == True:        
         print('--------  NEW EPISODE   ------------\n')
@@ -439,7 +434,7 @@ def play_episode(player_cards, dealer_cards,policy,epson,debugplay):
             
             
         if pa == HIT:
-            player_cards.append(random.choice(POSSIBLE_CARDS))
+            player_cards.append(choice(POSSIBLE_CARDS,p=CARD_WEIGHTS).astype(np.int))
             
         if debugplay == True:
             if pa == HIT:
@@ -460,7 +455,7 @@ def play_episode(player_cards, dealer_cards,policy,epson,debugplay):
     while episode_end == False:         
         # dealer action (fixed policy)
         if c_d < 17: #HIT
-            dealer_cards.append(random.choice(POSSIBLE_CARDS))
+            dealer_cards.append(choice(POSSIBLE_CARDS,p=CARD_WEIGHTS).astype(np.int))
             if debugplay == True:
                 print('dealer HITs')
                 print('dealer_cards',dealer_cards)
