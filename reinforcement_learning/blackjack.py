@@ -26,17 +26,18 @@ from numpy.random import choice
 
 POSSIBLE_CARDS = (1,2,3,4,5,6,7,8,9,10) # all face cards have value 10
 CARD_WEIGHTS =   (4.0/52.0,4.0/52.0,4.0/52.0,4.0/52.0,4.0/52.0,4.0/52.0,4.0/52.0,4.0/52.0,4.0/52.0,16.0/52.0)
-GAMMA = 1.0 # discount factor
+GAMMA = 0.9 # discount factor
 REWARD_WIN=+1.0
 REWARD_DRAW=0.0
 REWARD_BUST=-1.0
 HIT = 1
 STICK = 0
 ALPHA = 0.01 # for moving average approach to Q value for (s,a) iso true average
+
 MAX_EPSON = 0.5
 MIN_EPSON = 0.01
 EPSON_DECAY = 0.99999
-EVAL_EPISODES = 1000
+EVAL_EPISODES = 10000
 
 S = [] # state space
 pi = [] # policy
@@ -401,7 +402,7 @@ def random_action():
         return STICK
     
         
-def play_episode(player_cards, dealer_cards,policy,epson,debugplay):
+def play_episode(player_cards, dealer_cards,policy,epson,methodString,debugplay):
     visited_sa_list = []
     pa = HIT
 
@@ -423,14 +424,31 @@ def play_episode(player_cards, dealer_cards,policy,epson,debugplay):
     c_p = card_sum(player_cards)
     c_d = card_sum(dealer_cards)
     
-    # first: player turn
+    # first: player turns
     while pa == HIT:
+        
+        
+                
         s = state(player_cards, dealer_cards)
         pa = player_action(player_cards, dealer_cards,policy,epson)
         
+        
+        
         # only remember the  interesting, non obvious actions
-        if c_p >= 12:       
-            visited_sa_list.append((s[0],s[1],s[2],pa))
+        if c_p >= 12:  
+            cur_sa= (s[0],s[1],s[2],pa)
+            cur_reward = 0
+            
+            if methodString == 'td':
+                if len(visited_sa_list) > 0:
+                    prev_sa = visited_sa_list.pop()
+                    prev_sa_Q_ind = Q_dict[prev_sa]
+                    cur_sa_Q_ind = Q_dict[cur_sa]
+                    target = cur_reward + GAMMA*Q[cur_sa_Q_ind]
+                    Q[prev_sa_Q_ind] = Q[prev_sa_Q_ind] + ALPHA*(target - Q[prev_sa_Q_ind])
+                    update_pi((prev_sa[0],prev_sa[1],prev_sa[2]))
+            
+            visited_sa_list.append(cur_sa)
             
             
         if pa == HIT:
@@ -448,8 +466,6 @@ def play_episode(player_cards, dealer_cards,policy,epson,debugplay):
         if c_p > 21:
             episode_end = True
             break
-    if debugplay == True:
-        print('player_cards',player_cards)
         
     
     while episode_end == False:         
@@ -488,7 +504,14 @@ def play_episode(player_cards, dealer_cards,policy,epson,debugplay):
             else: # equals
                 r = REWARD_DRAW
             
-        
+    if methodString == 'td': # deal with the terminal state
+        if len(visited_sa_list) > 0:
+            prev_sa = visited_sa_list.pop()
+            prev_sa_Q_ind = Q_dict[prev_sa]
+            
+            target = r
+            Q[prev_sa_Q_ind] = Q[prev_sa_Q_ind] + ALPHA*(target - Q[prev_sa_Q_ind])    
+            update_pi((prev_sa[0],prev_sa[1],prev_sa[2]))
       
             
     if debugplay == True:
@@ -531,7 +554,7 @@ def test_pi(policy):
         player_cards = []       
         init_episode(dealer_cards, player_cards)
         
-        result = play_episode(dealer_cards, player_cards,policy,epson,debugplay)
+        result = play_episode(dealer_cards, player_cards,policy,epson,'mc',debugplay)
         if result[1] > 0:
             player_wins += 1
         elif result[1] < 0:
@@ -550,7 +573,7 @@ def main(argv):
     parser = argparse.ArgumentParser(description='MC e-greedy policy iteration on Sutton and Barto Blackjack problem example')
     
     
-    parser.add_argument('-m','--method', help='e:  epson greedy on policy, s: exploring starts', required=False)
+    parser.add_argument('-m','--method', help='mc:  Monte Carlo, td: TD(0)', required=False)
     parser.add_argument('-e','--episodes', help='-e <nr of episodes>', required=False)
     args = vars(parser.parse_args())
     
@@ -570,15 +593,10 @@ def main(argv):
         
    
     if method is None:
-        epson_greedy = True
+        methodString = 'mc'
     else:
-        if method=='e':
-            epson_greedy = True
-        elif method == 's':
-            epson_greedy  = False
-        else:
-            print('unsupported method, reverting to default method ',method)
-            epson_greedy = True
+        methodString = 'td'
+        
     epson = MAX_EPSON
     init_Q()
     init_optimal_pi()
@@ -590,8 +608,10 @@ def main(argv):
         player_cards = []       
         init_episode(dealer_cards, player_cards)
         
-        result = play_episode(dealer_cards, player_cards,pi,epson,debugplay)
-        backprop(result[0], result[1], debugplay)
+        result = play_episode(dealer_cards, player_cards,pi,epson,methodString,debugplay)
+        
+        if methodString == 'mc':
+            backprop(result[0], result[1], debugplay)
     
         epson = max(epson*EPSON_DECAY,MIN_EPSON)
         
