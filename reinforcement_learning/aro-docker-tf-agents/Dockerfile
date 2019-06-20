@@ -13,5 +13,7 @@ RUN pip install pyglet
 RUN pip install pyvirtualdisplay
 RUN pip install tf-agents-nightly
 RUN pip install tf-nightly
+RUN pip install gmaps
+RUN jupyter nbextension enable --py gmaps
 
 CMD ["bash", "-c", "source /etc/bash.bashrc && jupyter notebook --notebook-dir=/tf --ip 0.0.0.0 --no-browser --allow-root"]
